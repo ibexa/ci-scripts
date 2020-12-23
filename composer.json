@@ -1,0 +1,14 @@
+{
+    "name": "ibexa/ci-scripts",
+    "description": "CI scripts for Ibexa DXP",
+    "type": "library",
+    "license": "GPL-2.0-only",
+    "minimum-stability": "stable",
+    "require": {},
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.1.x-dev"
+        }
+    },
+    "bin": ["bin/check_cs.sh", "bin/prepare_project_variant.sh", "bin/update_docker.sh"]
+}
