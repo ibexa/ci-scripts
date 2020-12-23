@@ -7,7 +7,7 @@ COMPOSE_FILE=$3
 
 echo "> Setting up website skeleton"
 PROJECT_BUILD_DIR=${HOME}/build/project
-composer create-project ibexa/website-skeleton:dev-devel ${PROJECT_BUILD_DIR} --no-scripts 
+composer create-project ibexa/website-skeleton:dev-main ${PROJECT_BUILD_DIR} --no-scripts 
 
 DEPENDENCY_PACKAGE_DIR=$(pwd)
 
