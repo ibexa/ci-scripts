@@ -6,9 +6,8 @@ PROJECT_VERSION=$2
 COMPOSE_FILE=$3
 
 echo "> Setting up website skeleton"
-EZPLATFORM_BUILD_DIR=${HOME}/build/ezplatform
-# composer create-project ibexa/website-skeleton:^1.0@dev ${EZPLATFORM_BUILD_DIR} --no-scripts --repository=https://webhdx.repo.repman.io #TMP
-composer create-project ibexa/dev-website-skeleton:dev-devel ${EZPLATFORM_BUILD_DIR} --no-scripts --repository='{"type": "vcs", "url": "https://gitlab.com/webhdx/dev-website-skeleton.git"}'
+PROJECT_BUILD_DIR=${HOME}/build/project
+composer create-project ibexa/website-skeleton:dev-devel ${PROJECT_BUILD_DIR} --no-scripts 
 
 DEPENDENCY_PACKAGE_DIR=$(pwd)
 
@@ -20,26 +19,25 @@ if [[ -z "${DEPENDENCY_PACKAGE_NAME}" ]]; then
 fi
 
 echo '> Preparing project containers using the following setup:'
-echo "- EZPLATFORM_BUILD_DIR=${EZPLATFORM_BUILD_DIR}"
+echo "- PROJECT_BUILD_DIR=${PROJECT_BUILD_DIR}"
 echo "- DEPENDENCY_PACKAGE_NAME=${DEPENDENCY_PACKAGE_NAME}"
 
 # Move dependency to directory available for docker volume
-echo "> Move ${DEPENDENCY_PACKAGE_DIR} to ${EZPLATFORM_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}"
-mkdir -p ${EZPLATFORM_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}
-mv ${DEPENDENCY_PACKAGE_DIR}/* ${EZPLATFORM_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}/
+echo "> Move ${DEPENDENCY_PACKAGE_DIR} to ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}"
+mkdir -p ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}
+mv ${DEPENDENCY_PACKAGE_DIR}/* ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}/
 
 # Go to main project dir
-cd ${EZPLATFORM_BUILD_DIR}
+cd ${PROJECT_BUILD_DIR}
 
 # Make sure .env exists - we haven't installed Symfony packages yet
 touch .env
 
 # Install package with Docker Compose files
-composer config repositories.docker vcs https://github.com/mnocon/docker.git #TMP
-composer require --no-update --prefer-dist mnocon/docker:^1.0@dev
-composer update mnocon/docker --no-scripts
-composer recipes:install mnocon/docker
-rm composer.lock # remove lock created when installing Docker dependency
+composer require --no-update --prefer-dist ibexa/docker:^1.0@dev
+composer update ibexa/docker --no-scripts
+composer recipes:install ibexa/docker
+rm composer.lock symfony.lock # remove locks created when installing Docker dependency
 
 echo "> Make composer use tested dependency"
 composer config repositories.localDependency path ./${DEPENDENCY_PACKAGE_NAME}
@@ -48,11 +46,12 @@ composer config repositories.localDependency path ./${DEPENDENCY_PACKAGE_NAME}
 composer require ibexa/${PROJECT_VARIANT}:${PROJECT_VERSION} --no-scripts --no-update
 
 # Install packages required for testing
-composer require --no-update --prefer-dist ezsystems/behatbundle:"dev-overwrite-mink-config as 8.3.x-dev" #TMP - should there be a metapackage for testing libraries?
+composer require --no-update --prefer-dist ezsystems/behatbundle
 
 echo "> Install DB and dependencies - use Docker for consistent PHP version"
 docker-compose -f doc/docker/install-dependencies.yml up --abort-on-container-exit
 
+# ibexa/docker adds these entries to .env, but we need to make sure they're not overwritten by other recipes
 echo '> Set up database connection'
 echo 'DATABASE_URL=${DATABASE_PLATFORM}://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?serverVersion=${DATABASE_VERSION}' >> .env
 
@@ -64,7 +63,7 @@ echo '> Change ownership of files inside docker container'
 docker-compose exec app sh -c 'chown -R www-data:www-data /var/www'
 
 echo '> Install data'
-docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install clean" #TMP 1) hardcoded install type
+docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install clean"
 
 echo '> Generate GraphQL schema'
 docker-compose exec --user www-data app sh -c "php bin/console ezplatform:graphql:generate-schema"
