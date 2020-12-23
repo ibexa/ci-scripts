@@ -34,7 +34,7 @@ cd ${PROJECT_BUILD_DIR}
 touch .env
 
 # Install package with Docker Compose files
-composer require --no-update --prefer-dist ibexa/docker:^1.0@dev
+composer require --no-update --prefer-dist ibexa/docker:^0.1@dev
 composer update ibexa/docker --no-scripts
 composer recipes:install ibexa/docker
 rm composer.lock symfony.lock # remove locks created when installing Docker dependency
