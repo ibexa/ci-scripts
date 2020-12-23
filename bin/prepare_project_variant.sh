@@ -46,7 +46,7 @@ composer config repositories.localDependency path ./${DEPENDENCY_PACKAGE_NAME}
 composer require ibexa/${PROJECT_VARIANT}:${PROJECT_VERSION} --no-scripts --no-update
 
 # Install packages required for testing
-composer require --no-update --prefer-dist ezsystems/behatbundle
+composer require --no-update --prefer-dist ezsystems/behatbundle:^8.3@dev
 
 echo "> Install DB and dependencies - use Docker for consistent PHP version"
 docker-compose -f doc/docker/install-dependencies.yml up --abort-on-container-exit
