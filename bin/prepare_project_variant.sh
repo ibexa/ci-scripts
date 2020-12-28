@@ -30,6 +30,9 @@ mv ${DEPENDENCY_PACKAGE_DIR}/* ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}/
 # Go to main project dir
 cd ${PROJECT_BUILD_DIR}
 
+#TMP until flex.ibexa.co is up
+composer config extra.symfony.endpoint https://master-7rqtwti-m5okutrdqyvt2.eu-4.platformsh.site/ 
+
 # Make sure .env exists - we haven't installed Symfony packages yet
 touch .env
 
