@@ -55,7 +55,7 @@ composer require --no-update --prefer-dist ezsystems/behatbundle:^8.3.x-dev
 echo "> Install DB and dependencies - use Docker for consistent PHP version"
 docker-compose -f doc/docker/install-dependencies.yml up --abort-on-container-exit
 
-# composer sync-recipes --force
+composer sync-recipes --force
 
 # ibexa/docker adds these entries to .env, but we need to make sure they're not overwritten by other recipes
 echo '> Set up database connection'
