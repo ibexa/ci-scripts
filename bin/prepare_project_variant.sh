@@ -32,7 +32,6 @@ cd ${PROJECT_BUILD_DIR}
 
 #TMP until flex.ibexa.co is up
 composer config extra.symfony.endpoint https://master-7rqtwti-m5okutrdqyvt2.eu-4.platformsh.site/
-cat composer.json
 
 # Make sure .env exists - we haven't installed Symfony packages yet
 touch .env
@@ -41,7 +40,8 @@ touch .env
 composer require --no-update --prefer-dist ibexa/docker:^0.1@dev
 composer update ibexa/docker --no-scripts
 composer recipes:install ibexa/docker
-rm composer.lock symfony.lock # remove locks created when installing Docker dependency
+# remove locks created when installing Docker dependency
+rm composer.lock symfony.lock 
 
 echo "> Make composer use tested dependency"
 composer config repositories.localDependency path ./${DEPENDENCY_PACKAGE_NAME}
@@ -54,8 +54,6 @@ composer require --no-update --prefer-dist ezsystems/behatbundle:^8.3.x-dev
 
 echo "> Install DB and dependencies - use Docker for consistent PHP version"
 docker-compose -f doc/docker/install-dependencies.yml up --abort-on-container-exit
-
-# composer sync-recipes --force
 
 # ibexa/docker adds these entries to .env, but we need to make sure they're not overwritten by other recipes
 echo '> Set up database connection'
