@@ -33,6 +33,10 @@ cd ${PROJECT_BUILD_DIR}
 # Make sure .env exists - we haven't installed Symfony packages yet
 touch .env
 
+if [[ "$PROJECT_VARIANT" != "oss" ]]; then
+    composer config repositories.ibexa composer https://updates.ibexa.co
+fi
+
 # Install package with Docker Compose files
 composer require --no-update --prefer-dist ibexa/docker:^0.1@dev
 composer update ibexa/docker --no-scripts
@@ -62,8 +66,18 @@ docker-compose up -d
 echo '> Change ownership of files inside docker container'
 docker-compose exec app sh -c 'chown -R www-data:www-data /var/www'
 
-echo '> Install data'
-docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install clean"
+case $PROJECT_VARIANT in 
+    oss ) INSTALL_TYPE=clean;;
+    content ) INSTALL_TYPE=clean;;
+    experience ) INSTALL_TYPE=ezplatform-ee-clean;;
+esac
+
+if [[ "$PROJECT_VARIANT" = "commerce" ]]; then
+    docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install ezplatform-ee-clean"
+    docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install ezcommerce-clean"
+else
+    docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install ${INSTALL_TYPE}"
+fi
 
 echo '> Generate GraphQL schema'
 docker-compose exec --user www-data app sh -c "php bin/console ezplatform:graphql:generate-schema"
