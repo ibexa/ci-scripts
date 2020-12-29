@@ -30,6 +30,11 @@ mv ${DEPENDENCY_PACKAGE_DIR}/* ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}/
 # Go to main project dir
 cd ${PROJECT_BUILD_DIR}
 
+# Copy auth.json
+if [[ -f ${DEPENDENCY_PACKAGE_NAME}/auth.json ]]; then
+    cp ${DEPENDENCY_PACKAGE_NAME}/auth.json .
+fi
+
 # Make sure .env exists - we haven't installed Symfony packages yet
 touch .env
 
