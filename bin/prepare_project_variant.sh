@@ -33,8 +33,14 @@ cd ${PROJECT_BUILD_DIR}
 # Copy auth.json
 if [ -f ./${DEPENDENCY_PACKAGE_NAME}/auth.json ]; then
     cp ${DEPENDENCY_PACKAGE_NAME}/auth.json .
-    cat auth.json
 fi
+
+
+echo "TMP - copying config file"
+mkdir -p config/packages/behat
+cp ${DEPENDENCY_PACKAGE_NAME}/vendor/ibexa/ci-scripts/test/*.yaml config/packages/behat/
+
+echo "Done"
 
 # Make sure .env exists - we haven't installed Symfony packages yet
 touch .env

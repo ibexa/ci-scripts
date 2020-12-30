@@ -1,0 +1,25 @@
+ezplatform:
+    siteaccess:
+        groups:
+            sf_group_1: []
+            sf_group_2: []
+        default_siteaccess: site
+        match:
+            URIElement: 1
+            '@EzSystems\EzPlatformSiteFactory\SiteAccessMatcher': ~
+    system:
+        sf_group_1:
+            design: conference
+        sf_group_2:
+            design: roadshow
+
+ezdesign:
+    design_list:
+        conference: [conference_template]
+        roadshow: [roadshow_template]
+    phpstorm:
+        enabled: false
+
+parameters:
+    ezsettings.admin_group.notifications.success.timeout: 20000
+    ezplatform.behat.enable_enterprise_services: true
