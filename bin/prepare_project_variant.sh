@@ -81,10 +81,12 @@ docker-compose exec app sh -c 'chown -R www-data:www-data /var/www'
 case $PROJECT_VARIANT in 
     oss ) INSTALL_TYPE=clean;;
     content ) INSTALL_TYPE=clean;;
-    experience ) INSTALL_TYPE=ezplatform-ee-clean;;
 esac
 
 if [[ "$PROJECT_VARIANT" = "commerce" ]]; then
+    docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install ezplatform-ee-clean"
+    docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install ezcommerce-clean"
+elif [[ "$PROJECT_VARIANT" = "experience" ]]; then
     docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install ezplatform-ee-clean"
     docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install ezcommerce-clean"
 else
