@@ -69,7 +69,7 @@ if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
         PACKAGE_NAME=$(cat dependencies.json | jq -r .[$i].package)
         REQUIREMENT=$(cat dependencies.json | jq -r .[$i].requirement)
         composer config repositories.$(uuidgen) vcs "$REPO_URL"
-        composer require ${PACKAGE_NAME}:${REQUIREMENT}
+        composer require ${PACKAGE_NAME}:"$REQUIREMENT" --no-update
     done
 fi
 
