@@ -58,6 +58,21 @@ rm composer.lock symfony.lock # remove locks created when installing Docker depe
 echo "> Make composer use tested dependency"
 composer config repositories.localDependency path ./${DEPENDENCY_PACKAGE_NAME}
 
+
+if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
+    cp ${DEPENDENCY_PACKAGE_NAME}/dependencies.json .
+    echo "> Adding additional dependencies:"
+    cat dependencies.json
+    COUNT=$(cat dependencies.json | jq length)
+    for ((i=0;i<$COUNT;i++)); do
+        REPO_URL=$(cat dependencies.json | jq -r .[$i].repositoryUrl)
+        PACKAGE_NAME=$(cat dependencies.json | jq -r .[$i].package)
+        REQUIREMENT=$(cat dependencies.json | jq -r .[$i].requirement)
+        composer config repositories.$(uuidgen) vcs "$REPO_URL"
+        composer require ${PACKAGE_NAME}:${REQUIREMENT}
+    done
+fi
+
 # Install correct product variant
 composer require ibexa/${PROJECT_VARIANT}:${PROJECT_VERSION} --no-scripts --no-update
 
