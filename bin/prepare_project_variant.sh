@@ -36,8 +36,9 @@ if [ -f ./${DEPENDENCY_PACKAGE_NAME}/auth.json ]; then
 fi
 
 
-echo "TMP - copying config file"
+echo "> Add configuration files for testing"
 mkdir -p config/packages/behat
+# TODO: should be in BehatBundle? As extension?
 cp ${DEPENDENCY_PACKAGE_NAME}/vendor/ibexa/ci-scripts/test/*.yaml config/packages/behat/
 
 echo "Done"
