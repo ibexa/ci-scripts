@@ -94,21 +94,11 @@ docker-compose up -d
 echo '> Change ownership of files inside docker container'
 docker-compose exec app sh -c 'chown -R www-data:www-data /var/www'
 
-if [[ "$PROJECT_VARIANT" = "commerce" ]]; then
-    docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install ezplatform-ee-clean"
-    docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install ezcommerce-clean"
-elif [[ "$PROJECT_VARIANT" = "experience" ]]; then
-    docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install ezplatform-ee-clean"
-    docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install ezcommerce-clean"
-elif [[ "$PROJECT_VARIANT" = "content" ]]; then
-    docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install clean"
-    docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install ezcommerce-clean"
-else
-    docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install clean"
-fi
+echo '> Install database'
+docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install"
 
 echo '> Generate GraphQL schema'
-docker-compose exec --user www-data app sh -c "php bin/console ezplatform:graphql:generate-schema"
+docker-compose exec --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
 
 echo '> Clear cache & generate assets'
 docker-compose exec --user www-data app sh -c "composer run post-install-cmd"
