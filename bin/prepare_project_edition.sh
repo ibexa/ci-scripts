@@ -10,6 +10,11 @@ echo "> Setting up website skeleton"
 PROJECT_BUILD_DIR=${HOME}/build/project
 composer create-project ibexa/website-skeleton ${PROJECT_BUILD_DIR} --no-install --no-scripts 
 
+if [[ -n "${DOCKER_PASSWORD}" ]]; then
+    echo "> Set up Docker credentials"
+    echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
+fi
+
 # Create container to install dependencies
 docker run --name install_dependencies -d --volume=${PROJECT_BUILD_DIR}:/var/www:cached --volume=${HOME}/.composer:/root/.composer -e APP_ENV -e APP_DEBUG ${PHP_IMAGE}
 
