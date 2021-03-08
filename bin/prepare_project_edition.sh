@@ -16,7 +16,10 @@ if [[ -n "${DOCKER_PASSWORD}" ]]; then
 fi
 
 # Create container to install dependencies
-docker run --name install_dependencies -d --volume=${PROJECT_BUILD_DIR}:/var/www:cached --volume=${HOME}/.composer:/root/.composer -e APP_ENV -e APP_DEBUG ${PHP_IMAGE}
+docker run --name install_dependencies -d \
+--volume=${PROJECT_BUILD_DIR}:/var/www:cached --volume=${HOME}/.composer:/root/.composer \
+-e APP_ENV -e APP_DEBUG -e PHP_INI_ENV_memory_limit -e COMPOSER_MEMORY_LIMIT \
+${PHP_IMAGE}
 
 # Get details about dependency package
 DEPENDENCY_PACKAGE_DIR=$(pwd)
@@ -36,15 +39,27 @@ echo "> Move ${DEPENDENCY_PACKAGE_DIR} to ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACK
 mkdir -p ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}
 mv ${DEPENDENCY_PACKAGE_DIR}/* ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}/
 
+# Remove installed dependencies inside the package
+rm -rf ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}/vendor
+
 # Go to main project dir
 cd ${PROJECT_BUILD_DIR}
+
+# Copy auth.json if needed
+if [ -f ./${DEPENDENCY_PACKAGE_NAME}/auth.json ]; then
+    cp ${DEPENDENCY_PACKAGE_NAME}/auth.json .
+fi
+
+if [[ "$PROJECT_EDITION" != "oss" ]]; then
+    composer config repositories.ibexa composer https://updates.ibexa.co
+fi
 
 echo "> Make composer use tested dependency"
 JSON_STRING=$( jq -n \
                   --arg packageVersion "$DEPENDENCY_PACKAGE_VERSION" \
                   --arg packageName "$DEPENDENCY_PACKAGE_NAME" \
                   --arg packageDir "./$DEPENDENCY_PACKAGE_NAME" \
-                  '{"type": "path", "url": $packageDir, "options": { "versions": { ($packageName): $packageVersion}}}' )
+                  '{"type": "path", "url": $packageDir, "options": { "symlink": false , "versions": { ($packageName): $packageVersion}}}' )
 
 composer config repositories.localDependency "$JSON_STRING"
 
@@ -62,8 +77,25 @@ git init; git add . > /dev/null;
 # Execute Ibexa recipes
 docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force
 
+# Add other dependencies if required
+if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
+    cp ${DEPENDENCY_PACKAGE_NAME}/dependencies.json .
+    echo "> Adding additional dependencies:"
+    cat dependencies.json
+    COUNT=$(cat dependencies.json | jq length)
+    for ((i=0;i<$COUNT;i++)); do
+        REPO_URL=$(cat dependencies.json | jq -r .[$i].repositoryUrl)
+        PACKAGE_NAME=$(cat dependencies.json | jq -r .[$i].package)
+        REQUIREMENT=$(cat dependencies.json | jq -r .[$i].requirement)
+        composer config repositories.$(uuidgen) vcs "$REPO_URL"
+        composer require ${PACKAGE_NAME}:"$REQUIREMENT" --no-update
+    done
+    docker exec install_dependencies composer update --no-scripts
+fi
+
 # Install Docker stack
-docker exec install_dependencies composer require --dev ibexa/docker:^0.1@dev
+docker exec install_dependencies composer require --dev ibexa/docker:^0.1@dev --no-scripts
+docker exec install_dependencies composer sync-recipes ibexa/docker
 
 # Depenencies are installer and container can be removed
 docker container stop install_dependencies
@@ -75,6 +107,10 @@ docker-compose up -d
 # for Behat builds to work
 echo '> Change ownership of files inside docker container'
 docker-compose exec app sh -c 'chown -R www-data:www-data /var/www'
+
+# Rebuild container
+docker-compose exec --user www-data app sh -c "rm -rf var/cache/*"
+docker-compose exec --user www-data app php bin/console cache:clear
 
 echo '> Install data'
 docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install"
