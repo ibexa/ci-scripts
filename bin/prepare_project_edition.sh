@@ -67,8 +67,9 @@ composer config repositories.localDependency "$JSON_STRING"
 docker exec install_dependencies composer update
 docker exec -e APP_ENV=dev install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION}
 
-# Install packages required for testing
-docker exec install_dependencies composer require --dev ezsystems/behatbundle --no-scripts
+# Install packages required for testing - disabled prefer-stable so that @dev can be used
+docker exec install_dependencies composer config prefer-stable false
+docker exec install_dependencies composer require --dev ezsystems/behatbundle:*@dev --no-scripts
 docker exec install_dependencies composer sync-recipes ezsystems/behatbundle --force
 
 # Init a repository to avoid Composer asking questions
