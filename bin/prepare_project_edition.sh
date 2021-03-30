@@ -65,7 +65,7 @@ composer config repositories.localDependency "$JSON_STRING"
 
 # Install correct product variant
 docker exec install_dependencies composer update
-docker exec -e APP_ENV=dev install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION}
+docker exec -e APP_ENV=dev install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W
 
 # Install packages required for testing - disabled prefer-stable so that @dev can be used
 docker exec install_dependencies composer config prefer-stable false
