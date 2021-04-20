@@ -1,0 +1,12 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$application = new Symfony\Component\Console\Application;
+
+$application->add(new Ibexa\Platform\ContiniousIntegrationScripts\Command\LinkDependenciesCommand());
+$application->add(new Ibexa\Platform\ContiniousIntegrationScripts\Command\RunRegressionCommand());
+$application->setDefaultCommand('dependencies:link');
+
+$application->run();
