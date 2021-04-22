@@ -39,7 +39,7 @@ class RunRegressionCommand extends Command
 
         if (!$input->getArgument('productVersion')) {
             $productVersion = $io->ask('Please enter the Ibexa DXP version', '3.3', static function (string $answer): string {
-                if (preg_match('/(\d+)\.(\d+)/', $answer) === 0) {
+                if (preg_match('/^(\d+)\.(\d+)$/', $answer) === 0) {
                     throw new \RuntimeException(
                         sprintf(
                             'Unregognised version format: %s. Please use format X.Y instead, e.g. 3.3',
