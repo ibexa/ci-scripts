@@ -120,7 +120,7 @@ class RunRegressionCommand extends Command
     {
         if (!file_exists(LinkDependenciesCommand::DEPENDENCIES_FILE)) {
             throw new \RuntimeException(
-                sprintf("File '%s' not found. Please run `php bin/travis dependencies:link` before running this Command", LinkDependenciesCommand::DEPENDENCIES_FILE)
+                sprintf("File '%s' not found. Please run the `dependencies:link` before running this Command", LinkDependenciesCommand::DEPENDENCIES_FILE)
             );
         }
 
