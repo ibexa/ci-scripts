@@ -42,7 +42,7 @@ class RunRegressionCommand extends Command
                 if (preg_match('/^(\d+)\.(\d+)$/', $answer) === 0) {
                     throw new \RuntimeException(
                         sprintf(
-                            'Unregognised version format: %s. Please use format X.Y instead, e.g. 3.3',
+                            'Unrecognised version format: %s. Please use format X.Y instead, e.g. 3.3',
                         $answer)
                     );
                 }
