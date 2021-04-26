@@ -7,7 +7,7 @@
     "require": {},
     "extra": {
         "branch-alias": {
-            "dev-main": "0.1.x-dev"
+            "dev-main": "0.2.x-dev"
         }
     },
     "bin": ["bin/check_cs.sh", "bin/prepare_project_edition.sh", "bin/update_docker.sh"]
