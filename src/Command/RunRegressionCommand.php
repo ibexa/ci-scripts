@@ -20,7 +20,7 @@ use Symfony\Component\Filesystem\Filesystem;
 
 class RunRegressionCommand extends Command
 {
-    private const REPO_OWNER = 'mnocon';
+    private const REPO_OWNER = 'ezsystems';
 
     private const REPO_NAME = 'ezplatform-page-builder';
 
@@ -150,6 +150,8 @@ class RunRegressionCommand extends Command
     {
         switch ($productVersion) {
             case '3.3':
+                return '2.3';
+            case '4.0':
                 return 'master';
             case '2.5':
             case '3.2':

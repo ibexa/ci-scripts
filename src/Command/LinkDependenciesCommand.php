@@ -84,8 +84,9 @@ class LinkDependenciesCommand extends Command
         $pullRequestData = new ComposerPullRequestData();
         $pullRequestData->repositoryUrl = $pullRequestDetails['head']['repo']['html_url'];
         $branchName = $pullRequestDetails['head']['ref'];
+        $targetBranch = $pullRequestDetails['base']['ref'];
 
-        $composerData = json_decode($client->repos()->contents()->download($owner, $repository, 'composer.json'), true);
+        $composerData = json_decode($client->repos()->contents()->download($owner, $repository, 'composer.json', $targetBranch), true);
 
         $aliases = array_keys($composerData['extra']['branch-alias']);
         $branchAlias = $composerData['extra']['branch-alias'][$aliases[0]];
