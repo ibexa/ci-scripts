@@ -71,12 +71,17 @@ docker exec -e APP_ENV=dev install_dependencies composer require ibexa/${PROJECT
 docker exec install_dependencies composer config prefer-stable false
 docker exec install_dependencies composer require --dev ezsystems/behatbundle:*@dev --no-scripts
 docker exec install_dependencies composer sync-recipes ezsystems/behatbundle --force
+docker exec install_dependencies composer config prefer-stable true
 
 # Init a repository to avoid Composer asking questions
 git init; git add . > /dev/null;
 
 # Execute Ibexa recipes
 docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force
+
+# Install Docker stack
+docker exec install_dependencies composer require --dev ibexa/docker:^0.1@dev --no-scripts
+docker exec install_dependencies composer sync-recipes ibexa/docker
 
 # Add other dependencies if required
 if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
@@ -88,17 +93,13 @@ if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
         REPO_URL=$(cat dependencies.json | jq -r .[$i].repositoryUrl)
         PACKAGE_NAME=$(cat dependencies.json | jq -r .[$i].package)
         REQUIREMENT=$(cat dependencies.json | jq -r .[$i].requirement)
-        composer config repositories.$(uuidgen) vcs "$REPO_URL"
-        composer require ${PACKAGE_NAME}:"$REQUIREMENT" --no-update
+        docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
+        docker exec install_dependencies composer require ${PACKAGE_NAME}:"$REQUIREMENT" --no-scripts
+        docker exec install_dependencies composer sync-recipes ${PACKAGE_NAME} --force
     done
-    docker exec install_dependencies composer update --no-scripts
 fi
 
-# Install Docker stack
-docker exec install_dependencies composer require --dev ibexa/docker:^0.1@dev --no-scripts
-docker exec install_dependencies composer sync-recipes ibexa/docker
-
-# Depenencies are installer and container can be removed
+# Depenencies are installed and container can be removed
 docker container stop install_dependencies
 docker container rm install_dependencies
 
