@@ -4,11 +4,42 @@
     "type": "library",
     "license": "GPL-2.0-only",
     "minimum-stability": "stable",
-    "require": {},
+    "require": {
+        "php": "^7.3",
+        "ext-json": "*",
+        "symfony/console": "^5.2",
+        "symfony/serializer": "^5.2",
+        "symfony/property-access": "^5.2",
+        "czproject/git-php": "^3.18",
+        "knplabs/github-api": "^3.0",
+        "php-http/guzzle6-adapter": "^2.0",
+        "guzzlehttp/guzzle": "^6.5",
+        "symfony/filesystem": "^5.0",
+        "http-interop/http-factory-guzzle": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ibexa\\Platform\\ContiniousIntegrationScripts\\": "src/"
+        }
+    },
     "extra": {
         "branch-alias": {
             "dev-main": "0.2.x-dev"
         }
     },
-    "bin": ["bin/check_cs.sh", "bin/prepare_project_edition.sh", "bin/update_docker.sh"]
+    "bin": [
+        "bin/check_cs.sh",
+        "bin/prepare_project_edition.sh",
+        "bin/update_docker.sh",
+        "bin/travis"
+    ],
+    "require-dev": {
+        "ezsystems/ezplatform-code-style": "^1.0@dev",
+        "phpstan/phpstan": "~0.12"
+    },
+    "scripts": {
+        "phpstan": "phpstan analyse -c phpstan.neon",
+        "phpstan-baseline": "phpstan analyse -c phpstan.neon --generate-baseline",
+        "fix-cs": "php-cs-fixer fix -v --show-progress=estimating"
+    }
 }
