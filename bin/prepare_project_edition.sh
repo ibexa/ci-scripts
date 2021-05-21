@@ -93,7 +93,11 @@ if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
         REPO_URL=$(cat dependencies.json | jq -r .[$i].repositoryUrl)
         PACKAGE_NAME=$(cat dependencies.json | jq -r .[$i].package)
         REQUIREMENT=$(cat dependencies.json | jq -r .[$i].requirement)
-        docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
+        IS_PRIVATE=$(cat dependencies.json | jq -r .[$i].privateRepository)
+        if [[ $IS_PRIVATE == "true" ]] ; then 
+            echo ">> Private repository, adding VCS to Composer repositories"
+            docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
+        fi
         docker exec install_dependencies composer require ${PACKAGE_NAME}:"$REQUIREMENT" --no-scripts
         docker exec install_dependencies composer sync-recipes ${PACKAGE_NAME} --force
     done

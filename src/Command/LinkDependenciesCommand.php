@@ -83,6 +83,7 @@ class LinkDependenciesCommand extends Command
 
         $pullRequestData = new ComposerPullRequestData();
         $pullRequestData->repositoryUrl = $pullRequestDetails['head']['repo']['html_url'];
+        $pullRequestData->privateRepository = $pullRequestDetails['head']['repo']['private'];
         $branchName = $pullRequestDetails['head']['ref'];
         $targetBranch = $pullRequestDetails['base']['ref'];
 
