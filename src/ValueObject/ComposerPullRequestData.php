@@ -18,4 +18,7 @@ class ComposerPullRequestData
 
     /** @var string */
     public $package;
+
+    /** @var bool */
+    public $privateRepository;
 }
