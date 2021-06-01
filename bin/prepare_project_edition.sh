@@ -70,11 +70,10 @@ composer config repositories.localDependency "$JSON_STRING"
 docker exec install_dependencies composer update
 docker exec -e APP_ENV=dev install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W
 
-# Install packages required for testing - disabled prefer-stable so that @dev can be used
-docker exec install_dependencies composer config prefer-stable false
-docker exec install_dependencies composer require --dev ezsystems/behatbundle:*@dev --no-scripts
+# TMP - install phpunit ^8.0 first
+docker exec install_dependencies composer require --dev phpunit/phpunit:^8.0 -W --no-scripts
+docker exec install_dependencies composer require --dev ezsystems/behatbundle:^8.3.x-dev -W --no-scripts
 docker exec install_dependencies composer sync-recipes ezsystems/behatbundle --force
-docker exec install_dependencies composer config prefer-stable true
 
 # Init a repository to avoid Composer asking questions
 git init; git add . > /dev/null;
@@ -83,10 +82,8 @@ git init; git add . > /dev/null;
 docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force
 
 # Install Docker stack
-docker exec install_dependencies composer config prefer-stable false
-docker exec install_dependencies composer require --dev ibexa/docker:^0.1@dev --no-scripts
+docker exec install_dependencies composer require --dev ibexa/docker:^0.1.x-dev --no-scripts
 docker exec install_dependencies composer sync-recipes ibexa/docker
-docker exec install_dependencies composer config prefer-stable true
 
 # Add other dependencies if required
 if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
