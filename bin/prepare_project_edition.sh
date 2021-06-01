@@ -72,7 +72,7 @@ docker exec -e APP_ENV=dev install_dependencies composer require ibexa/${PROJECT
 
 # TMP - install phpunit ^8.0 first
 docker exec install_dependencies composer require --dev phpunit/phpunit:^8.0 -W --no-scripts
-docker exec install_dependencies composer require --dev ezsystems/behatbundle:^8.3.x-dev -W --no-scripts
+docker exec install_dependencies composer require --dev ezsystems/behatbundle:^9.0.x-dev -W --no-scripts
 docker exec install_dependencies composer sync-recipes ezsystems/behatbundle --force
 
 # Init a repository to avoid Composer asking questions
