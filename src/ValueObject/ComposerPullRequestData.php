@@ -20,5 +20,5 @@ class ComposerPullRequestData
     public $package;
 
     /** @var bool */
-    public $privateRepository;
+    public $shouldBeAddedAsVCS;
 }
