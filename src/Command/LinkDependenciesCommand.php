@@ -83,7 +83,7 @@ class LinkDependenciesCommand extends Command
 
         $pullRequestData = new ComposerPullRequestData();
         $pullRequestData->repositoryUrl = $pullRequestDetails['head']['repo']['html_url'];
-        $pullRequestData->privateRepository = $pullRequestDetails['head']['repo']['private'];
+        $pullRequestData->shouldBeAddedAsVCS = $pullRequestDetails['head']['repo']['private'] || $pullRequestDetails['head']['repo']['fork'];
         $branchName = $pullRequestDetails['head']['ref'];
         $targetBranch = $pullRequestDetails['base']['ref'];
 
