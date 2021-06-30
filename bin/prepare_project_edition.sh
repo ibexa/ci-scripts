@@ -68,6 +68,7 @@ composer config repositories.localDependency "$JSON_STRING"
 
 # Install correct product variant
 docker exec install_dependencies composer update
+docker exec -e APP_ENV=dev install_dependencies composer require ibexa/oss:"dev-symfony53 as 3.3.x-dev" -W
 docker exec -e APP_ENV=dev install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W
 
 # TMP - install phpunit ^8.0 first
