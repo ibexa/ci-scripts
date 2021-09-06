@@ -70,8 +70,7 @@ composer config repositories.localDependency "$JSON_STRING"
 docker exec install_dependencies composer update
 docker exec -e APP_ENV=dev install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts
 
-# TMP - install phpunit ^8.0 first
-docker exec install_dependencies composer require --dev phpunit/phpunit:^8.0 -W --no-scripts
+# Install BehatBundle
 docker exec install_dependencies composer require --dev ezsystems/behatbundle:^8.3.x-dev -W --no-scripts --no-plugins
 docker exec install_dependencies composer sync-recipes ezsystems/behatbundle --force
 
