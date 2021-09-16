@@ -24,7 +24,7 @@ class RunRegressionCommand extends Command
 
     private const REPO_NAME = 'ezplatform-page-builder';
 
-    private const COMMIT_MESSAGE = '[TMP] Run Regression';
+    private const COMMIT_MESSAGE = '[TMP] Run regression';
 
     /** @var ?string */
     private $token;
