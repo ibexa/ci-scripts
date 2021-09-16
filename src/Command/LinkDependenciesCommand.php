@@ -70,7 +70,7 @@ class LinkDependenciesCommand extends Command
         preg_match('/.*github.com\/(.*)\/(.*)\/pull\/(\d+).*/', $pullRequestURL, $matches);
         [, $owner, $repository, $prNumber] = $matches;
 
-        if ($repository === "recipes") {
+        if ($repository === 'recipes') {
             throw new \RuntimeException('Symfony Flex recipes are not supported as dependencies. Please consult QA team what can be done in this case.');
         }
 

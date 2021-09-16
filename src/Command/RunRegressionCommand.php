@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Ibexa\Platform\ContiniousIntegrationScripts\Command;
 
+use Cz\Git\GitException;
 use Cz\Git\GitRepository;
 use Github\Client;
 use Ibexa\Platform\ContiniousIntegrationScripts\Helper\ComposerHelper;
@@ -24,7 +25,7 @@ class RunRegressionCommand extends Command
 
     private const REPO_NAME = 'ezplatform-page-builder';
 
-    private const COMMIT_MESSAGE = '[TMP] Run Regression';
+    private const COMMIT_MESSAGE = '[TMP] Run regression';
 
     /** @var ?string */
     private $token;
@@ -65,10 +66,19 @@ class RunRegressionCommand extends Command
         $pageBuilderBaseBranch = $this->mapProductVersionToPageBuilder($productVersion);
         $regressionBranchName = uniqid('tmp_regression_', true);
 
-        $repo = GitRepository::cloneRepository(
-            sprintf('https://github.com/%s/%s.git', self::REPO_OWNER, self::REPO_NAME),
-            null, ['-b' => $pageBuilderBaseBranch]
-        );
+        try {
+            $repo = GitRepository::cloneRepository(
+                sprintf('https://github.com/%s/%s.git', self::REPO_OWNER, self::REPO_NAME),
+                null, ['-b' => $pageBuilderBaseBranch]
+            );
+        } catch (GitException $exception) {
+            // fallback to SSH if HTTPS fails
+            $repo = GitRepository::cloneRepository(
+                sprintf('git@github.com:%s/%s.git', self::REPO_OWNER, self::REPO_NAME),
+                null, ['-b' => $pageBuilderBaseBranch]
+            );
+        }
+
         $repo->createBranch($regressionBranchName, true);
         $repo->removeBranch($pageBuilderBaseBranch);
 
