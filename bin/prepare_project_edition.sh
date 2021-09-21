@@ -4,7 +4,7 @@ set -e
 PROJECT_EDITION=$1
 PROJECT_VERSION=$2
 COMPOSE_FILE=$3
-export PHP_IMAGE=${4-ezsystems/php:7.3-v2-node12}
+export PHP_IMAGE=${4-ezsystems/php:7.3-v2-node14}
 
 echo "> Setting up website skeleton"
 PROJECT_BUILD_DIR=${HOME}/build/project
