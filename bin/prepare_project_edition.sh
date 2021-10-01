@@ -115,7 +115,7 @@ docker container stop install_dependencies
 docker container rm install_dependencies
 
 echo "> Start docker containers specified by ${COMPOSE_FILE}"
-docker-compose up -d
+docker-compose --env-file .env up -d
 
 # for Behat builds to work
 echo '> Change ownership of files inside docker container'
