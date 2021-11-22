@@ -114,12 +114,6 @@ fi
 docker container stop install_dependencies
 docker container rm install_dependencies
 
-# TODO: Remove when Travis is no longer used
-# Workaround for older docker-compose versions
-# Newer docker-compose versions look for the .env file in doc/docker
-# Older use the current working directory (and do not support the --env-file option)
-sudo cp .env doc/docker
-
 echo "> Start docker containers specified by ${COMPOSE_FILE}"
 docker-compose up -d
 
