@@ -3,7 +3,7 @@ set -e
 
 PROJECT_EDITION=$1
 PROJECT_VERSION=$2
-COMPOSE_FILE=$3
+export COMPOSE_FILE=$3
 export PHP_IMAGE=${4-ezsystems/php:7.3-v2-node14}
 
 echo "> Setting up website skeleton"
@@ -26,8 +26,8 @@ ${PHP_IMAGE}
 
 # Get details about dependency package
 DEPENDENCY_PACKAGE_DIR=$(pwd)
-DEPENDENCY_PACKAGE_NAME=`php -r "echo json_decode(file_get_contents('${DEPENDENCY_PACKAGE_DIR}/composer.json'))->name;"`
-DEPENDENCY_PACKAGE_VERSION=`php -r "echo json_decode(file_get_contents('${DEPENDENCY_PACKAGE_DIR}/composer.json'))->extra->{'branch-alias'}->{'dev-master'};"`
+DEPENDENCY_PACKAGE_NAME=$(php -r "echo json_decode(file_get_contents('${DEPENDENCY_PACKAGE_DIR}/composer.json'))->name;")
+DEPENDENCY_PACKAGE_VERSION=$(php -r "echo json_decode(file_get_contents('${DEPENDENCY_PACKAGE_DIR}/composer.json'))->extra->{'branch-alias'}->{'dev-master'};")
 if [[ -z "${DEPENDENCY_PACKAGE_NAME}" ]]; then
     echo 'Missing composer package name of tested dependency' >&2
     exit 2
@@ -110,6 +110,9 @@ if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
     done
 fi
 
+# Create a default Behat configuration file
+cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
+
 # Depenencies are installed and container can be removed
 docker container stop install_dependencies
 docker container rm install_dependencies
@@ -125,19 +128,19 @@ docker-compose up -d
 
 # for Behat builds to work
 echo '> Change ownership of files inside docker container'
-docker-compose exec app sh -c 'chown -R www-data:www-data /var/www'
+docker-compose exec -T app sh -c 'chown -R www-data:www-data /var/www'
 
 # Rebuild container
-docker-compose exec --user www-data app sh -c "rm -rf var/cache/*"
-docker-compose exec --user www-data app php bin/console cache:clear
+docker-compose exec -T --user www-data app sh -c "rm -rf var/cache/*"
+docker-compose exec -T --user www-data app php bin/console cache:clear
 
 echo '> Install data'
-docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install"
+docker-compose exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install"
 
 echo '> Generate GraphQL schema'
-docker-compose exec --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
+docker-compose exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
 
 echo '> Clear cache & generate assets'
-docker-compose exec --user www-data app sh -c "composer run post-install-cmd"
+docker-compose exec -T --user www-data app sh -c "composer run post-install-cmd"
 
 echo '> Done, ready to run tests'
