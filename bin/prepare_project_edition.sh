@@ -118,23 +118,23 @@ docker container stop install_dependencies
 docker container rm install_dependencies
 
 echo "> Start docker containers specified by ${COMPOSE_FILE}"
-docker-compose up -d
+docker-compose --env-file=.env up -d
 
 # for Behat builds to work
 echo '> Change ownership of files inside docker container'
-docker-compose exec -T app sh -c 'chown -R www-data:www-data /var/www'
+docker-compose --env-file=.env exec -T app sh -c 'chown -R www-data:www-data /var/www'
 
 # Rebuild container
-docker-compose exec -T --user www-data app sh -c "rm -rf var/cache/*"
-docker-compose exec -T --user www-data app php bin/console cache:clear
+docker-compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cache/*"
+docker-compose --env-file=.env exec -T --user www-data app php bin/console cache:clear
 
 echo '> Install data'
-docker-compose exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install"
+docker-compose --env-file=.env exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install"
 
 echo '> Generate GraphQL schema'
-docker-compose exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
+docker-compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
 
 echo '> Clear cache & generate assets'
-docker-compose exec -T --user www-data app sh -c "composer run post-install-cmd"
+docker-compose --env-file=.env exec -T --user www-data app sh -c "composer run post-install-cmd"
 
 echo '> Done, ready to run tests'
