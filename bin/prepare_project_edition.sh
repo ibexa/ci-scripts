@@ -81,7 +81,7 @@ git init; git add . > /dev/null;
 docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force
 
 # Install Docker stack
-docker exec install_dependencies composer require --dev ibexa/docker:^0.1.x-dev --no-scripts
+docker exec install_dependencies composer require --dev ibexa/docker:^0.2.x-dev --no-scripts
 docker exec install_dependencies composer sync-recipes ibexa/docker
 
 # Add other dependencies if required
