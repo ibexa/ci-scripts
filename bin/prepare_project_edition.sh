@@ -33,6 +33,11 @@ if [[ -z "${DEPENDENCY_PACKAGE_NAME}" ]]; then
     exit 2
 fi
 
+cd "$DEPENDENCY_PACKAGE_DIR"
+git fetch --unshallow
+git status
+cd -
+
 echo '> Preparing project containers using the following setup:'
 echo "- PROJECT_BUILD_DIR=${PROJECT_BUILD_DIR}"
 echo "- DEPENDENCY_PACKAGE_NAME=${DEPENDENCY_PACKAGE_NAME}"
