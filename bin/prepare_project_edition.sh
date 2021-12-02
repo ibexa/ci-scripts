@@ -70,7 +70,7 @@ JSON_STRING=$( jq -n \
                   --arg packageDir "./$DEPENDENCY_PACKAGE_NAME" \
                   '{"type": "path", "url": $packageDir, "options": { "symlink": false , "versions": { ($packageName): $packageVersion}}}' )
 
-composer config repositories.localDependency "$JSON_STRING"
+# composer config repositories.localDependency "$JSON_STRING"
 
 # Install correct product variant
 docker exec install_dependencies composer update
