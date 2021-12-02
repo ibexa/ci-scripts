@@ -36,6 +36,7 @@ fi
 cd "$DEPENDENCY_PACKAGE_DIR"
 git fetch --unshallow
 git status
+git checkout rebranding
 cd -
 
 echo '> Preparing project containers using the following setup:'
