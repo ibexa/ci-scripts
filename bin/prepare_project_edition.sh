@@ -51,7 +51,7 @@ export MIRROR_OFFICIAL_ENDPOINT=true
 export MIRROR_CONTRIB_RECIPES=false
 export FLEX_RECIPE_REPO_PRIVATE=https://github.com/ibexa/recipes/
 composer install
-cat "FLEX_RECIPE_REPO_PRIVATE=https://github.com/ibexa/recipes/" >> .env
+echo "FLEX_RECIPE_REPO_PRIVATE=https://github.com/ibexa/recipes/" >> .env
 php bin/console recipes:initialize
 cd var/repo/private
 git checkout main
