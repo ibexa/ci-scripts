@@ -107,7 +107,6 @@ if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
         fi
         jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
         mv composer.json.new composer.json
-        cat composer.json
     done
 
     docker exec install_dependencies composer update --no-scripts
