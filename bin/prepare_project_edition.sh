@@ -42,6 +42,13 @@ cd -
 # FLex serwer
 git clone https://github.com/moay/server-for-symfony-flex.git flex_server
 cd flex_server
+export FLEX_OFFICIAL_ENDPOINT=https://symfony.sh/
+export FLEX_RECIPE_REPO_OFFICIAL=https://github.com/symfony/recipes
+export FLEX_RECIPE_REPO_CONTRIB=https://github.com/symfony/recipes-contrib
+export PROXY_OFFICIAL_ENDPOINT=true
+export CACHE_OFFICIAL_ENDPOINT=true
+export MIRROR_OFFICIAL_ENDPOINT=true
+export MIRROR_CONTRIB_RECIPES=false
 export FLEX_RECIPE_REPO_PRIVATE=https://github.com/ibexa/recipes/
 composer install
 cat "FLEX_RECIPE_REPO_PRIVATE=https://github.com/ibexa/recipes/" >> .env
