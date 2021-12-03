@@ -109,7 +109,9 @@ docker exec install_dependencies composer sync-recipes ezsystems/behatbundle --f
 git init; git add . > /dev/null;
 
 # Execute Ibexa recipes
-docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force
+composer recipes:install ibexa/${PROJECT_EDITION} --force
+
+composer config extra.symfony.endpoint https://flex.ibexa.co
 
 # Install Docker stack
 docker exec install_dependencies composer require --dev ibexa/docker:^0.2.x-dev --no-scripts
