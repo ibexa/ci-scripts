@@ -54,7 +54,7 @@ composer install
 echo "FLEX_RECIPE_REPO_PRIVATE=https://github.com/ibexa/recipes/" >> .env
 php bin/console recipes:initialize
 cd var/repo/private
-git checkout main
+git checkout master
 cd -
 php bin/console recipes:update
 php -S localhost:8060 -t public &
