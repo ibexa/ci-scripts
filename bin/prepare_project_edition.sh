@@ -105,15 +105,12 @@ if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
             echo ">> Private or fork repository detected, adding VCS to Composer repositories"
             docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
         fi
-        docker exec install_dependencies composer require ${PACKAGE_NAME}:"$REQUIREMENT" --no-scripts --no-install || true
+        docker exec install_dependencies jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
+        docker exec install_dependencies mv composer.json.new composer.json
+        docker exec install_dependencies cat composer.json
     done
 
-    docker exec install_dependencies composer install --no-scripts
-
-    for ((i=0;i<$COUNT;i++)); do
-        PACKAGE_NAME=$(cat dependencies.json | jq -r .[$i].package)
-        docker exec install_dependencies composer sync-recipes ${PACKAGE_NAME} --force
-    done
+    docker exec install_dependencies composer update --no-scripts
 fi
 
 # Create a default Behat configuration file
