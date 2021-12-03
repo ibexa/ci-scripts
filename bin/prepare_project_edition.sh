@@ -75,10 +75,6 @@ rm -rf ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}/vendor
 # Go to main project dir
 cd ${PROJECT_BUILD_DIR}
 
-# Configure flex
-composer config extra.symfony.endpoint http://localhost:8060
-composer config secure-http false
-
 # Copy auth.json if needed
 if [ -f ./${DEPENDENCY_PACKAGE_NAME}/auth.json ]; then
     cp ${DEPENDENCY_PACKAGE_NAME}/auth.json .
@@ -107,6 +103,10 @@ docker exec install_dependencies composer sync-recipes ezsystems/behatbundle --f
 
 # Init a repository to avoid Composer asking questions
 git init; git add . > /dev/null;
+
+# Configure flex
+composer config extra.symfony.endpoint http://localhost:8060
+composer config secure-http false
 
 # Execute Ibexa recipes
 composer recipes:install ibexa/${PROJECT_EDITION} --force
