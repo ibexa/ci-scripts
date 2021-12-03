@@ -59,8 +59,6 @@ cd -
 php bin/console recipes:update
 php -S localhost:8060 -t public &
 cd ..
-composer config extra.symfony.endpoint http://localhost:8060
-composer config secure-http false
 
 echo '> Preparing project containers using the following setup:'
 echo "- PROJECT_BUILD_DIR=${PROJECT_BUILD_DIR}"
@@ -76,6 +74,10 @@ rm -rf ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}/vendor
 
 # Go to main project dir
 cd ${PROJECT_BUILD_DIR}
+
+# Configure flex
+composer config extra.symfony.endpoint http://localhost:8060
+composer config secure-http false
 
 # Copy auth.json if needed
 if [ -f ./${DEPENDENCY_PACKAGE_NAME}/auth.json ]; then
