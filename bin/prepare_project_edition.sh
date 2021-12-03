@@ -39,6 +39,22 @@ git status
 git checkout rebranding
 cd -
 
+# FLex serwer
+git clone https://github.com/moay/server-for-symfony-flex.git flex_server
+cd flex_server
+composer install
+cat "FLEX_RECIPE_REPO_PRIVATE=https://github.com/ibexa/recipes/" >> .env
+php bin/console recipes:initialize
+cd var/repo/private
+git checkout main
+cd -
+php bin/console recipes:update
+php -S localhost:8060 -t public &
+composer config extra.symfony.endpoint http://localhost:8060
+composer config secure-http false
+cd ..
+
+
 echo '> Preparing project containers using the following setup:'
 echo "- PROJECT_BUILD_DIR=${PROJECT_BUILD_DIR}"
 echo "- DEPENDENCY_PACKAGE_NAME=${DEPENDENCY_PACKAGE_NAME}"
