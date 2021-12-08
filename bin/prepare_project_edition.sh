@@ -15,11 +15,14 @@ if [[ -n "${DOCKER_PASSWORD}" ]]; then
     echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
 fi
 
+export COMPOSER_MAX_PARALLEL_HTTP=6
+
 # Create container to install dependencies
 docker run --name install_dependencies -d \
 --volume=${PROJECT_BUILD_DIR}:/var/www:cached \
 --volume=${HOME}/.composer:/root/.composer \
 -e APP_ENV -e APP_DEBUG  \
+-e COMPOSER_MAX_PARALLEL_HTTP \
 -e PHP_INI_ENV_memory_limit -e COMPOSER_MEMORY_LIMIT \
 -e COMPOSER_NO_INTERACTION=1 \
 ${PHP_IMAGE}
