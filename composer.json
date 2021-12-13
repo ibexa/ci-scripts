@@ -5,7 +5,7 @@
     "license": "GPL-2.0-only",
     "minimum-stability": "stable",
     "require": {
-        "php": "^7.3",
+        "php": "^7.3 || ^8.0",
         "ext-json": "*",
         "symfony/console": "^5.2",
         "symfony/serializer": "^5.2",
