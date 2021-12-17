@@ -85,7 +85,6 @@ docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITIO
 
 # Install Docker stack
 docker exec install_dependencies composer require --dev ibexa/docker:^0.1.x-dev --no-scripts
-docker exec install_dependencies composer sync-recipes ibexa/docker
 
 # Add other dependencies if required
 if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
@@ -108,10 +107,9 @@ if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
 
     docker exec install_dependencies composer update --no-scripts
 
-    for ((i=0;i<$COUNT;i++)); do
-        PACKAGE_NAME=$(cat dependencies.json | jq -r .[$i].package)
-        docker exec install_dependencies composer sync-recipes ${PACKAGE_NAME} --force
-    done
+    # Execute recipes from BehatBundle and docker again, because they use copy-from-package
+    docker exec install_dependencies composer sync-recipes ibexa/docker --force
+    docker exec install_dependencies composer sync-recipes ezsystems/behatbundle --force
 fi
 
 # Create a default Behat configuration file
