@@ -85,7 +85,6 @@ docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITIO
 
 # Install Docker stack
 docker exec install_dependencies composer require --dev ibexa/docker:^0.2.x-dev --no-scripts
-docker exec install_dependencies composer sync-recipes ibexa/docker
 
 # Add other dependencies if required
 if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
@@ -102,15 +101,15 @@ if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
             echo ">> Private or fork repository detected, adding VCS to Composer repositories"
             docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
         fi
-        docker exec install_dependencies composer require ${PACKAGE_NAME}:"$REQUIREMENT" --no-scripts --no-install || true
+        jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
+        mv composer.json.new composer.json
     done
 
-    docker exec install_dependencies composer install --no-scripts
+    docker exec install_dependencies composer update --no-scripts
 
-    for ((i=0;i<$COUNT;i++)); do
-        PACKAGE_NAME=$(cat dependencies.json | jq -r .[$i].package)
-        docker exec install_dependencies composer sync-recipes ${PACKAGE_NAME} --force
-    done
+    # Execute recipes from BehatBundle and docker again, because they use copy-from-package
+    docker exec install_dependencies composer sync-recipes ibexa/docker --force
+    docker exec install_dependencies composer sync-recipes ezsystems/behatbundle --force
 fi
 
 # Create a default Behat configuration file
