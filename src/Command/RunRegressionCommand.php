@@ -88,13 +88,13 @@ class RunRegressionCommand extends Command
 
         try {
             $repo = GitRepository::cloneRepository(
-                sprintf('https://github.com/%s/%s.git', self::REPO_OWNER, $productEdition),
+                sprintf('git@github.com:%s/%s.git', self::REPO_OWNER, $productEdition),
                 null, ['-b' => $baseBranch]
             );
         } catch (GitException $exception) {
-            // fallback to SSH if HTTPS fails
+            // fallback to HTTPS if SSH fails
             $repo = GitRepository::cloneRepository(
-                sprintf('git@github.com:%s/%s.git', self::REPO_OWNER, $productEdition),
+                sprintf('https://github.com/%s/%s.git', self::REPO_OWNER, $productEdition),
                 null, ['-b' => $baseBranch]
             );
         }
