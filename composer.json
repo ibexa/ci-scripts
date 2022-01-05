@@ -28,10 +28,7 @@
         }
     },
     "bin": [
-        "bin/check_cs.sh",
-        "bin/prepare_project_edition.sh",
-        "bin/update_docker.sh",
-        "bin/travis"
+        "bin/ci"
     ],
     "require-dev": {
         "ezsystems/ezplatform-code-style": "^1.0@dev",
