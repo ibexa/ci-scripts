@@ -90,6 +90,7 @@ if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
     cp ${DEPENDENCY_PACKAGE_NAME}/dependencies.json .
     echo "> Adding additional dependencies:"
     cat dependencies.json
+    PACKAGES_TO_UPDATE=""
     COUNT=$(cat dependencies.json | jq length)
     for ((i=0;i<$COUNT;i++)); do
         REPO_URL=$(cat dependencies.json | jq -r .[$i].repositoryUrl)
@@ -98,13 +99,19 @@ if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
         SHOULD_BE_ADDED_AS_VCS=$(cat dependencies.json | jq -r .[$i].shouldBeAddedAsVCS)
         if [[ $SHOULD_BE_ADDED_AS_VCS == "true" ]] ; then 
             echo ">> Private or fork repository detected, adding VCS to Composer repositories"
-            docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
+            JSON_STRING=$( jq -n \
+                  --arg repositoryURL "$REPO_URL" \
+                  --arg packageName "$DEPENDENCY_PACKAGE_NAME" \
+                  --arg packageDir "./$DEPENDENCY_PACKAGE_NAME" \
+                  '{"type": "vcs", "no-api": true, "url": $repositoryURL}' )
+            docker exec install_dependencies composer config repositories.$(uuidgen) "$JSON_STRING"
         fi
         jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
         mv composer.json.new composer.json
+        PACKAGES_TO_UPDATE="$PACKAGES_TO_UPDATE $PACKAGE_NAME"
     done
 
-    docker exec install_dependencies composer update --no-scripts
+    docker exec install_dependencies composer update $PACKAGES_TO_UPDATE --no-scripts --no-plugins
 
     # Execute recipes from behat and docker again, because they use copy-from-package
     docker exec install_dependencies composer sync-recipes ibexa/docker --force --reset
