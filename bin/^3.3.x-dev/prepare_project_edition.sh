@@ -115,6 +115,9 @@ fi
 # Create a default Behat configuration file
 cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
 
+# TMP Workaround for assets issue
+sudo sed -i "s/'%kernel.project_dir%\/public\/build\/manifest.json'/~/g" config/packages/webpack_encore.yaml
+
 # Depenencies are installed and container can be removed
 docker container stop install_dependencies
 docker container rm install_dependencies
@@ -134,15 +137,14 @@ docker-compose exec -T app sh -c 'chown -R www-data:www-data /var/www'
 
 # Rebuild container
 docker-compose exec -T --user www-data app sh -c "rm -rf var/cache/*"
-docker-compose exec -T --user www-data app php bin/console cache:clear
+
+echo '> Clear cache & generate assets'
+docker-compose exec -T --user www-data app sh -c "composer run post-install-cmd"
 
 echo '> Install data'
 docker-compose exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install"
 
 echo '> Generate GraphQL schema'
 docker-compose exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
-
-echo '> Clear cache & generate assets'
-docker-compose exec -T --user www-data app sh -c "composer run post-install-cmd"
 
 echo '> Done, ready to run tests'
