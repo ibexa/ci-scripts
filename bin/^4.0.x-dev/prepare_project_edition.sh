@@ -74,8 +74,7 @@ docker exec install_dependencies composer update
 docker exec -e APP_ENV=dev install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts
 
 # Install BehatBundle
-docker exec install_dependencies composer require ezsystems/behatbundle:^9.0.x-dev --no-scripts --no-plugins
-docker exec install_dependencies composer sync-recipes ezsystems/behatbundle --force
+docker exec install_dependencies composer require ezsystems/behatbundle:^9.0.x-dev --no-scripts
 
 # Init a repository to avoid Composer asking questions
 git init; git add . > /dev/null;
