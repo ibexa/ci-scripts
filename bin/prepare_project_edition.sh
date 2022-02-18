@@ -74,8 +74,7 @@ docker exec install_dependencies composer update
 docker exec -e APP_ENV=dev install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts
 
 # Install BehatBundle
-docker exec install_dependencies composer require ezsystems/behatbundle:^8.3.x-dev --no-scripts --no-plugins
-docker exec install_dependencies composer sync-recipes ezsystems/behatbundle --force
+docker exec install_dependencies composer require ezsystems/behatbundle:^8.3.x-dev --no-scripts
 
 # Init a repository to avoid Composer asking questions
 git init; git add . > /dev/null;
@@ -134,15 +133,13 @@ docker-compose exec -T app sh -c 'chown -R www-data:www-data /var/www'
 
 # Rebuild container
 docker-compose exec -T --user www-data app sh -c "rm -rf var/cache/*"
-docker-compose exec -T --user www-data app php bin/console cache:clear
+echo '> Clear cache & generate assets'
+docker-compose exec -T --user www-data app sh -c "composer run post-install-cmd"
 
 echo '> Install data'
 docker-compose exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install"
 
 echo '> Generate GraphQL schema'
 docker-compose exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
-
-echo '> Clear cache & generate assets'
-docker-compose exec -T --user www-data app sh -c "composer run post-install-cmd"
 
 echo '> Done, ready to run tests'
