@@ -8,7 +8,7 @@ export PHP_IMAGE=${4-ezsystems/php:7.4-v2-node14}
 
 echo "> Setting up website skeleton"
 PROJECT_BUILD_DIR=${HOME}/build/project
-composer create-project ibexa/website-skeleton:^4.0@dev ${PROJECT_BUILD_DIR} --no-install --no-scripts 
+composer create-project mnocon/website-skeleton:^4.0@dev ${PROJECT_BUILD_DIR} --no-install --no-scripts --repository='{"type": "vcs","url": "https://github.com/mnocon/website-skeleton"}'
 
 if [[ -n "${DOCKER_PASSWORD}" ]]; then
     echo "> Set up Docker credentials"
@@ -80,7 +80,7 @@ docker exec install_dependencies composer require ezsystems/behatbundle:^9.0.x-d
 git init; git add . > /dev/null;
 
 # Execute Ibexa recipes
-docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force
+docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force --reset
 
 # Install Docker stack
 docker exec install_dependencies composer require ibexa/docker:^0.2.x-dev --no-scripts
