@@ -80,7 +80,7 @@ docker exec install_dependencies composer require ezsystems/behatbundle:^9.0.x-d
 git init; git add . > /dev/null;
 
 # Execute Ibexa recipes
-docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force
+docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force --reset
 
 # Install Docker stack
 docker exec install_dependencies composer require ibexa/docker:^0.2.x-dev --no-scripts
