@@ -73,8 +73,8 @@ composer config repositories.localDependency "$JSON_STRING"
 docker exec install_dependencies composer update
 docker exec -e APP_ENV=dev install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts
 
-# Install BehatBundle
-docker exec install_dependencies composer require ezsystems/behatbundle:^9.0.x-dev --no-scripts
+# Install ibexa/behat
+docker exec install_dependencies composer require ibexa/behat:^4.0.x-dev --no-scripts
 
 # Init a repository to avoid Composer asking questions
 git init; git add . > /dev/null;
@@ -106,9 +106,9 @@ if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
 
     docker exec install_dependencies composer update --no-scripts
 
-    # Execute recipes from BehatBundle and docker again, because they use copy-from-package
+    # Execute recipes from behat and docker again, because they use copy-from-package
     docker exec install_dependencies composer sync-recipes ibexa/docker --force
-    docker exec install_dependencies composer sync-recipes ezsystems/behatbundle --force
+    docker exec install_dependencies composer sync-recipes ibexa/behat --force
 fi
 
 # Create a default Behat configuration file
