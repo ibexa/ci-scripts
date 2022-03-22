@@ -8,7 +8,7 @@ export PHP_IMAGE=${4-ezsystems/php:7.4-v2-node16}
 
 echo "> Setting up website skeleton"
 PROJECT_BUILD_DIR=${HOME}/build/project
-composer create-project ibexa/website-skeleton:^4.0@dev ${PROJECT_BUILD_DIR} --no-install --no-scripts 
+composer create-project ibexa/website-skeleton:~4.1.0@dev ${PROJECT_BUILD_DIR} --no-install --no-scripts 
 
 if [[ -n "${DOCKER_PASSWORD}" ]]; then
     echo "> Set up Docker credentials"
