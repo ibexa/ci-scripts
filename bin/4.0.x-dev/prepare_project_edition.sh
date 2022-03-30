@@ -107,8 +107,8 @@ if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
     docker exec install_dependencies composer update --no-scripts
 
     # Execute recipes from behat and docker again, because they use copy-from-package
-    docker exec install_dependencies composer sync-recipes ibexa/docker --force
-    docker exec install_dependencies composer sync-recipes ibexa/behat --force
+    docker exec install_dependencies composer sync-recipes ibexa/docker --force --reset
+    docker exec install_dependencies composer sync-recipes ibexa/behat --force --reset
 fi
 
 # Create a default Behat configuration file
