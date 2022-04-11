@@ -130,9 +130,6 @@ docker-compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cac
 echo '> Clear cache & generate assets'
 docker-compose --env-file=.env exec -T --user www-data app sh -c "composer run post-install-cmd"
 
-# Workaround: create cache directory for JSRoutingBundle, see https://github.com/FriendsOfSymfony/FOSJsRoutingBundle/pull/434
-docker-compose --env-file=.env exec -T --user www-data app sh -c "mkdir var/cache/$APP_ENV/fosJsRouting"
-
 echo '> Install data'
 docker-compose --env-file=.env exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install"
 
