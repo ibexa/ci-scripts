@@ -22,6 +22,7 @@ docker run --name install_dependencies -d \
 --volume=${PROJECT_BUILD_DIR}:/var/www:cached \
 --volume=${HOME}/.composer:/root/.composer \
 -e APP_ENV -e APP_DEBUG  \
+-e SYMFONY_ENDPOINT \
 -e COMPOSER_MAX_PARALLEL_HTTP \
 -e PHP_INI_ENV_memory_limit -e COMPOSER_MEMORY_LIMIT \
 -e COMPOSER_NO_INTERACTION=1 \
