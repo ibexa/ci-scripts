@@ -11,6 +11,7 @@ namespace Ibexa\Platform\ContiniousIntegrationScripts\Command;
 use Github\Client;
 use Ibexa\Platform\ContiniousIntegrationScripts\Helper\ComposerHelper;
 use Ibexa\Platform\ContiniousIntegrationScripts\ValueObject\ComposerPullRequestData;
+use Ibexa\Platform\ContiniousIntegrationScripts\ValueObject\Dependencies;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -45,12 +46,8 @@ class LinkDependenciesCommand extends Command
 
         $this->token = $input->getArgument('token');
 
-        $pullRequestsData = [];
-        foreach ($this->pullRequestUrls as $pullRequestUrl) {
-            $pullRequestsData[] = $this->getPullRequestData($pullRequestUrl);
-        }
-
-        $this->createDependenciesFile($pullRequestsData, $io);
+        $dependencies = $this->analyzeDependencies($this->pullRequestUrls);
+        $this->createDependenciesFile($dependencies, $io);
 
         return Command::SUCCESS;
     }
@@ -64,16 +61,8 @@ class LinkDependenciesCommand extends Command
         ;
     }
 
-    private function getPullRequestData(string $pullRequestURL): ComposerPullRequestData
+    private function getPullRequestData(string $owner, string $repository, int $prNumber): ComposerPullRequestData
     {
-        $matches = [];
-        preg_match('/.*github.com\/(.*)\/(.*)\/pull\/(\d+).*/', $pullRequestURL, $matches);
-        [, $owner, $repository, $prNumber] = $matches;
-
-        if ($repository === 'recipes') {
-            throw new \RuntimeException('Symfony Flex recipes are not supported as dependencies. Please consult QA team what can be done in this case.');
-        }
-
         $client = new Client();
         if ($this->token) {
             $client->authenticate($this->token, null, Client::AUTH_ACCESS_TOKEN);
@@ -130,13 +119,43 @@ class LinkDependenciesCommand extends Command
         $this->pullRequestUrls = array_unique($pullRequestUrls);
     }
 
-    /**
-     * @param \Ibexa\Platform\ContiniousIntegrationScripts\ValueObject\ComposerPullRequestData[] $pullRequestsData
-     */
-    private function createDependenciesFile(array $pullRequestsData, SymfonyStyle $io): void
+    private function createDependenciesFile(Dependencies $dependencies, SymfonyStyle $io): void
     {
-        $jsonContent = $this->serializer->serialize($pullRequestsData, 'json', ['json_encode_options' => JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT]);
+        $jsonContent = $this->serializer->serialize($dependencies, 'json', ['json_encode_options' => JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT]);
         file_put_contents(self::DEPENDENCIES_FILE, $jsonContent);
         $io->success(sprintf('Successfully generated %s file', self::DEPENDENCIES_FILE));
+    }
+
+    /**
+     * @param string[] $pullRequestUrls
+     */
+    private function analyzeDependencies(array $pullRequestUrls): Dependencies
+    {
+        $pullRequestsData = [];
+        $recipesEndpoint = '';
+
+        foreach ($pullRequestUrls as $pullRequestUrl) {
+            $matches = [];
+            preg_match('/.*github.com\/(.*)\/(.*)\/pull\/(\d+).*/', $pullRequestUrl, $matches);
+            [, $owner, $repository, $prNumber] = $matches;
+            $prNumber = (int)$prNumber;
+
+            if ($owner === 'ibexa' && $repository === 'recipes-dev') {
+                $recipesEndpoint = $this->getRecipesEndpointUrl($owner, $repository, $prNumber);
+            } else {
+                $pullRequestsData[] = $this->getPullRequestData($owner, $repository, $prNumber);
+            }
+        }
+
+        return new Dependencies($recipesEndpoint, $pullRequestsData);
+    }
+
+    private function getRecipesEndpointUrl(string $owner, string $repository, int $prNumber): string
+    {
+        return sprintf(
+                'https://api.github.com/repos/%s/%s/contents/index.json?ref=flex/pull-%d',
+                $owner,
+                $repository,
+                $prNumber);
     }
 }
