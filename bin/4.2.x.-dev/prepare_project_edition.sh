@@ -40,7 +40,7 @@ docker run --name install_dependencies -d \
 ${PHP_IMAGE}
 
 echo "> Setting up website skeleton"
-composer create-project ibexa/website-skeleton:~4.0.0@dev . --no-install
+composer create-project ibexa/website-skeleton:~4.2.0@dev . --no-install
 
 # Add other dependencies if required
 if [ -f ${DEPENDENCY_PACKAGE_DIR}/dependencies.json ]; then
@@ -83,7 +83,7 @@ JSON_STRING=$( jq -n \
 composer config repositories.localDependency "$JSON_STRING"
 
 # Install Behat and Docker packages
-docker exec install_dependencies composer require ibexa/behat:~4.0.x-dev ibexa/docker:^0.2.x-dev --no-scripts --no-update
+docker exec install_dependencies composer require ibexa/behat:~4.2.x-dev ibexa/docker:^0.2.x-dev --no-scripts --no-update
 
 # Add other dependencies if required
 if [ -f dependencies.json ]; then

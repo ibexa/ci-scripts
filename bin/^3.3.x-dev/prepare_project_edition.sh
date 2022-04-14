@@ -3,19 +3,31 @@ set -e
 
 PROJECT_EDITION=$1
 PROJECT_VERSION=$2
+PROJECT_BUILD_DIR=${HOME}/build/project
 export COMPOSE_FILE=$3
 export PHP_IMAGE=${4-ezsystems/php:7.3-v2-node14}
-
-echo "> Setting up website skeleton"
-PROJECT_BUILD_DIR=${HOME}/build/project
-composer create-project ibexa/website-skeleton:^3.3@dev ${PROJECT_BUILD_DIR} --no-install --no-scripts 
+export COMPOSER_MAX_PARALLEL_HTTP=6 # Reduce Composer parallelism to work around Github Actions network errors
 
 if [[ -n "${DOCKER_PASSWORD}" ]]; then
     echo "> Set up Docker credentials"
     echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
 fi
 
-export COMPOSER_MAX_PARALLEL_HTTP=6
+# Get details about dependency package
+DEPENDENCY_PACKAGE_DIR=$(pwd)
+DEPENDENCY_PACKAGE_NAME=$(jq -r '.["name"]' "${DEPENDENCY_PACKAGE_DIR}/composer.json")
+DEPENDENCY_PACKAGE_VERSION=$(jq -r '.["extra"]["branch-alias"] | flatten | .[0]' "${DEPENDENCY_PACKAGE_DIR}/composer.json")
+if [[ -z "${DEPENDENCY_PACKAGE_NAME}" ]]; then
+    echo 'Missing composer package name of tested dependency' >&2
+    exit 2
+fi
+
+echo '> Preparing project containers using the following setup:'
+echo "- PROJECT_BUILD_DIR=${PROJECT_BUILD_DIR}"
+echo "- DEPENDENCY_PACKAGE_NAME=${DEPENDENCY_PACKAGE_NAME}"
+
+# Go to main project dir
+mkdir -p $PROJECT_BUILD_DIR && cd $PROJECT_BUILD_DIR
 
 # Create container to install dependencies
 docker run --name install_dependencies -d \
@@ -27,18 +39,22 @@ docker run --name install_dependencies -d \
 -e COMPOSER_NO_INTERACTION=1 \
 ${PHP_IMAGE}
 
-# Get details about dependency package
-DEPENDENCY_PACKAGE_DIR=$(pwd)
-DEPENDENCY_PACKAGE_NAME=$(php -r "echo json_decode(file_get_contents('${DEPENDENCY_PACKAGE_DIR}/composer.json'))->name;")
-DEPENDENCY_PACKAGE_VERSION=$(php -r "echo json_decode(file_get_contents('${DEPENDENCY_PACKAGE_DIR}/composer.json'))->extra->{'branch-alias'}->{'dev-master'};")
-if [[ -z "${DEPENDENCY_PACKAGE_NAME}" ]]; then
-    echo 'Missing composer package name of tested dependency' >&2
-    exit 2
+echo "> Setting up website skeleton"
+composer create-project ibexa/website-skeleton:~3.3.0@dev . --no-install
+
+# Add other dependencies if required
+if [ -f ${DEPENDENCY_PACKAGE_DIR}/dependencies.json ]; then
+    cp ${DEPENDENCY_PACKAGE_DIR}/dependencies.json .
+    echo "> Additional dependencies will be added"
+    cat dependencies.json
+    RECIPES_ENDPOINT=$(cat dependencies.json | jq -r '.recipesEndpoint')
+    if [[ $RECIPES_ENDPOINT != "" ]] ; then
+        echo "> Switching Symfony Flex endpoint to $RECIPES_ENDPOINT"
+        composer config extra.symfony.endpoint $RECIPES_ENDPOINT
+    fi
 fi
 
-echo '> Preparing project containers using the following setup:'
-echo "- PROJECT_BUILD_DIR=${PROJECT_BUILD_DIR}"
-echo "- DEPENDENCY_PACKAGE_NAME=${DEPENDENCY_PACKAGE_NAME}"
+docker exec install_dependencies composer update
 
 # Move dependency to directory available for docker volume
 echo "> Move ${DEPENDENCY_PACKAGE_DIR} to ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}"
@@ -47,9 +63,6 @@ mv ${DEPENDENCY_PACKAGE_DIR}/* ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}/
 
 # Remove installed dependencies inside the package
 rm -rf ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}/vendor
-
-# Go to main project dir
-cd ${PROJECT_BUILD_DIR}
 
 # Copy auth.json if needed
 if [ -f ./${DEPENDENCY_PACKAGE_NAME}/auth.json ]; then
@@ -69,34 +82,17 @@ JSON_STRING=$( jq -n \
 
 composer config repositories.localDependency "$JSON_STRING"
 
-# Install correct product variant
-docker exec install_dependencies composer update
-docker exec -e APP_ENV=dev install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts
-
-# Install BehatBundle
-docker exec install_dependencies composer require ezsystems/behatbundle:^8.3.x-dev --no-scripts --no-plugins
-docker exec install_dependencies composer recipes:install ezsystems/behatbundle --force --reset
-
-# Init a repository to avoid Composer asking questions
-git init; git add . > /dev/null;
-
-# Execute Ibexa recipes
-docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force --reset
-
-# Install Docker stack
-docker exec install_dependencies composer require ibexa/docker:^0.1.x-dev --no-scripts
+# Install Behat and Docker packages
+docker exec install_dependencies composer require ezsystems/behatbundle:^8.3.x-dev ibexa/docker:^0.1.x-dev --no-scripts --no-update
 
 # Add other dependencies if required
-if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
-    cp ${DEPENDENCY_PACKAGE_NAME}/dependencies.json .
-    echo "> Adding additional dependencies:"
-    cat dependencies.json
-    COUNT=$(cat dependencies.json | jq length)
+if [ -f dependencies.json ]; then
+    COUNT=$(cat dependencies.json | jq '.packages | length' )
     for ((i=0;i<$COUNT;i++)); do
-        REPO_URL=$(cat dependencies.json | jq -r .[$i].repositoryUrl)
-        PACKAGE_NAME=$(cat dependencies.json | jq -r .[$i].package)
-        REQUIREMENT=$(cat dependencies.json | jq -r .[$i].requirement)
-        SHOULD_BE_ADDED_AS_VCS=$(cat dependencies.json | jq -r .[$i].shouldBeAddedAsVCS)
+        REPO_URL=$(cat dependencies.json | jq -r .packages[$i].repositoryUrl)
+        PACKAGE_NAME=$(cat dependencies.json | jq -r .packages[$i].package)
+        REQUIREMENT=$(cat dependencies.json | jq -r .packages[$i].requirement)
+        SHOULD_BE_ADDED_AS_VCS=$(cat dependencies.json | jq -r .packages[$i].shouldBeAddedAsVCS)
         if [[ $SHOULD_BE_ADDED_AS_VCS == "true" ]] ; then 
             echo ">> Private or fork repository detected, adding VCS to Composer repositories"
             docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
@@ -104,13 +100,17 @@ if [ -f ./${DEPENDENCY_PACKAGE_NAME}/dependencies.json ]; then
         jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
         mv composer.json.new composer.json
     done
-
-    docker exec install_dependencies composer update --no-scripts
-
-    # Execute recipes from BehatBundle and docker again, because they use copy-from-package
-    docker exec install_dependencies composer sync-recipes ibexa/docker --force --reset
-    docker exec install_dependencies composer sync-recipes ezsystems/behatbundle --force --reset
 fi
+
+# Install correct product variant
+docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts
+# Init a repository to avoid Composer asking questions
+git init; git add . > /dev/null;
+# Execute recipes
+docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force --reset
+
+# Enable FriendsOfBehat SymfonyExtension in the Behat env
+sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/bundles.php
 
 # Create a default Behat configuration file
 cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
@@ -119,28 +119,22 @@ cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
 docker container stop install_dependencies
 docker container rm install_dependencies
 
-# TODO: Remove when Travis is no longer used
-# Workaround for older docker-compose versions
-# Newer docker-compose versions look for the .env file in doc/docker
-# Older use the current working directory (and do not support the --env-file option)
-sudo cp .env doc/docker
-
 echo "> Start docker containers specified by ${COMPOSE_FILE}"
-docker-compose up -d
+docker-compose --env-file=.env up -d
 
 # for Behat builds to work
 echo '> Change ownership of files inside docker container'
-docker-compose exec -T app sh -c 'chown -R www-data:www-data /var/www'
+docker-compose --env-file=.env exec -T app sh -c 'chown -R www-data:www-data /var/www'
 
 # Rebuild container
-docker-compose exec -T --user www-data app sh -c "rm -rf var/cache/*"
+docker-compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cache/*"
 echo '> Clear cache & generate assets'
-docker-compose exec -T --user www-data app sh -c "composer run post-install-cmd"
+docker-compose --env-file=.env exec -T --user www-data app sh -c "composer run post-install-cmd"
 
 echo '> Install data'
-docker-compose exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install"
+docker-compose --env-file=.env exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install"
 
 echo '> Generate GraphQL schema'
-docker-compose exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
+docker-compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
 
 echo '> Done, ready to run tests'
