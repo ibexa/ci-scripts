@@ -9,10 +9,10 @@ declare(strict_types=1);
 namespace Ibexa\Platform\ContiniousIntegrationScripts\Command;
 
 use Cz\Git\GitException;
-use JsonException;
 use Cz\Git\GitRepository;
 use Github\Client;
 use Ibexa\Platform\ContiniousIntegrationScripts\Helper\ComposerHelper;
+use JsonException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -174,9 +174,7 @@ class RunRegressionCommand extends Command
 
         try {
             json_decode($dependenciesFile, true, 512, JSON_THROW_ON_ERROR);
-        }
-        catch (JsonException $e)
-        {
+        } catch (JsonException $e) {
             throw new \RuntimeException(
                 sprintf("File '%s' is not a valid JSON.", LinkDependenciesCommand::DEPENDENCIES_FILE)
             );
