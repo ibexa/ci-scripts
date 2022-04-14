@@ -55,22 +55,25 @@ class RunRegressionCommand extends Command
             $input->setArgument('productVersion', $productVersion);
         }
 
-        if (!$input->getArgument('productEdition')) {
-            $productEdition = $io->ask('Please enter the Ibexa DXP edition', 'oss', static function (string $answer): string {
-                if (!in_array($answer, self::PRODUCT_EDITIONS)) {
-                    throw new \RuntimeException(
-                        sprintf(
-                            'Unrecognised edition: %s. Please choose one of: %s',
-                        $answer,
-                        implode(',', self::PRODUCT_EDITIONS)
-                        )
-                    );
+        if (!$input->getArgument('productEditions')) {
+            $productEditions = $io->ask('Please enter the Ibexa DXP edition(s)', 'oss', static function (string $answer): array {
+                $editions = explode(',', $answer);
+                foreach ($editions as $edition) {
+                    if (!in_array($edition, self::PRODUCT_EDITIONS)) {
+                        throw new \RuntimeException(
+                            sprintf(
+                                'Unrecognised edition: %s. Please choose one of: %s',
+                                $edition,
+                                implode(',', self::PRODUCT_EDITIONS)
+                            )
+                        );
+                    }
                 }
 
-                return $answer;
+                return $editions;
             });
 
-            $input->setArgument('productEdition', $productEdition);
+            $input->setArgument('productEditions', $productEditions);
         }
     }
 
@@ -79,13 +82,22 @@ class RunRegressionCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $this->token = $input->getArgument('token');
         $productVersion = $input->getArgument('productVersion');
-        $productEdition = $input->getArgument('productEdition');
+        $productEditions = $input->getArgument('productEditions');
 
         $this->validate();
 
         $baseBranch = $this->getBaseBranch($productVersion);
         $regressionBranchName = uniqid('tmp_regression_', true);
 
+        foreach ($productEditions as $productEdition) {
+            $this->createRegressionPullRequest($productEdition, $baseBranch, $regressionBranchName, $io);
+        }
+
+        return Command::SUCCESS;
+    }
+
+    private function createRegressionPullRequest(string $productEdition, string $baseBranch, string $regressionBranchName, SymfonyStyle $io): void
+    {
         try {
             $repo = GitRepository::cloneRepository(
                 sprintf('git@github.com:%s/%s.git', self::REPO_OWNER, $productEdition),
@@ -118,13 +130,13 @@ class RunRegressionCommand extends Command
         $this->waitUntilBranchExists($client, $productEdition, $regressionBranchName);
 
         $response = $client->pullRequests()->create(self::REPO_OWNER, $productEdition,
-        [
-            'title' => 'Run regression for IBX-XXXX',
-            'base' => $baseBranch,
-            'head' => $regressionBranchName,
-            'body' => 'Please add your description here.',
-            'draft' => 'true',
-        ]);
+            [
+                'title' => 'Run regression for IBX-XXXX',
+                'base' => $baseBranch,
+                'head' => $regressionBranchName,
+                'body' => 'Please add your description here.',
+                'draft' => 'true',
+            ]);
 
         $io->success(sprintf('Created PR, please see: %s', $response['_links']['html']['href']));
 
@@ -132,8 +144,6 @@ class RunRegressionCommand extends Command
             $fs = new Filesystem();
             $fs->remove($productEdition);
         }
-
-        return Command::SUCCESS;
     }
 
     protected function configure(): void
@@ -142,7 +152,7 @@ class RunRegressionCommand extends Command
             ->setName('regression:run')
             ->setDescription('Triggers a regression run on Travis')
             ->addArgument('productVersion', InputArgument::REQUIRED, 'Ibexa DXP version')
-            ->addArgument('productEdition', InputArgument::REQUIRED, 'Ibexa DXP edition')
+            ->addArgument('productEditions', InputArgument::REQUIRED, 'Ibexa DXP edition')
             ->addArgument('token', InputArgument::OPTIONAL, 'GitHub token')
         ;
     }
