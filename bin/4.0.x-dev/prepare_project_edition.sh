@@ -75,6 +75,7 @@ docker exec -e APP_ENV=dev install_dependencies composer require ibexa/${PROJECT
 
 # Install ibexa/behat
 docker exec install_dependencies composer require ibexa/behat:~4.0.x-dev --no-scripts
+docker exec install_dependencies composer recipes:install ibexa/behat --force --reset
 
 # Init a repository to avoid Composer asking questions
 git init; git add . > /dev/null;
