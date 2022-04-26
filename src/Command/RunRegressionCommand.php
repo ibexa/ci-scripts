@@ -205,6 +205,6 @@ class RunRegressionCommand extends Command
 
     private function getBaseBranch(string $productVersion): string
     {
-        return $productVersion === "4.1" ? "master" : $productVersion;
+        return $productVersion === "4.2" ? "master" : $productVersion;
     }
 }
