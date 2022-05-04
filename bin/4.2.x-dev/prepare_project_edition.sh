@@ -95,7 +95,12 @@ if [ -f dependencies.json ]; then
         SHOULD_BE_ADDED_AS_VCS=$(cat dependencies.json | jq -r .packages[$i].shouldBeAddedAsVCS)
         if [[ $SHOULD_BE_ADDED_AS_VCS == "true" ]] ; then 
             echo ">> Private or fork repository detected, adding VCS to Composer repositories"
-            docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
+            JSON_STRING=$( jq -n \
+                --arg repositoryURL "$REPO_URL" \
+                --arg packageName "$DEPENDENCY_PACKAGE_NAME" \
+                --arg packageDir "./$DEPENDENCY_PACKAGE_NAME" \
+                '{"type": "vcs", "no-api": true, "url": $repositoryURL}' )
+            docker exec install_dependencies composer config repositories.$(uuidgen) "$JSON_STRING"
         fi
         jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
         mv composer.json.new composer.json
