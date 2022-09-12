@@ -42,10 +42,10 @@ fi
 
 if [[ $PROJECT_VERSION == *"v3.3"* ]]; then
     echo "> Installing dependencies for 3.3"
-    docker exec install_dependencies composer require ezsystems/behatbundle:^8.3 ibexa/docker:~0.1.6 --no-scripts
+    docker exec install_dependencies composer require ezsystems/behatbundle:^8.3 ibexa/docker:$PROJECT_VERSION --no-scripts
 else
     echo "> Installing dependencies for v4"
-    docker exec install_dependencies composer require ibexa/behat:^4.0 ibexa/docker:~0.2.0 --no-scripts
+    docker exec install_dependencies composer require ibexa/behat:^4.0 ibexa/docker:$PROJECT_VERSION --no-scripts
 fi
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
