@@ -71,6 +71,24 @@ fi
 
 if [[ "$PROJECT_EDITION" != "oss" ]]; then
     composer config repositories.ibexa composer https://updates.ibexa.co
+
+    editions=(commerce experience content)
+
+    IBEXA_PACKAGES="[]"
+    for EDITION in "${editions[@]}"; do
+        if [[ "$PROJECT_EDITION" == "$EDITION" ]]; then
+            break
+        fi
+        BRANCH=${GITHUB_BASE_REF:-"$GITHUB_REF_NAME"} # Fallback to GITHUB_REF_NAME for non-PR builds
+        COMPOSER_JSON_CONTENT=$(curl -s "https://raw.githubusercontent.com/ibexa/$EDITION/$BRANCH/composer.json")
+        EDITION_PACKAGES=$(echo "$COMPOSER_JSON_CONTENT" | \
+            jq -r --arg projectEdition "ibexa/$PROJECT_EDITION" \
+            '.require | with_entries(select(.key | contains("ibexa/") or contains("ezsystems/"))) | with_entries(select(.key == $projectEdition | not )) | keys')
+        IBEXA_PACKAGES=$(echo "$IBEXA_PACKAGES" | jq --argjson editionPackages "$EDITION_PACKAGES" '. + $editionPackages')
+
+    done
+    jq --argjson ibexaPackages "$IBEXA_PACKAGES" '.repositories.ibexa.exclude = $ibexaPackages' composer.json > composer.json.new
+    mv composer.json.new composer.json
 fi
 
 echo "> Make composer use tested dependency"
@@ -114,6 +132,9 @@ sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/
 
 # Create a default Behat configuration file
 cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
+
+echo "> Display composer.json for debugging"
+cat composer.json
 
 # Depenencies are installed and container can be removed
 docker container stop install_dependencies
