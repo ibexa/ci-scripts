@@ -40,10 +40,10 @@ fi
 if [[ $PHP_IMAGE == *"8."* && $PROJECT_VERSION == *"v3.3"* ]]; then
     # See "Using PHP 8": https://doc.ibexa.co/en/3.3/getting_started/install_ez_platform/#set-up-authentication-tokens
     echo "> Running composer update"
-    docker exec -e APP_ENV=dev install_dependencies composer update
+    docker exec install_dependencies composer update
 else
     echo "> Running composer install"
-    docker exec -e APP_ENV=dev install_dependencies composer install
+    docker exec install_dependencies composer install
 fi
 
 if [[ $PROJECT_VERSION == *"v3.3"* ]]; then
