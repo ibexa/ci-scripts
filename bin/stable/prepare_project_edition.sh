@@ -9,7 +9,8 @@ export PHP_IMAGE=${4-ezsystems/php:7.4-v2-node16}
 export COMPOSER_MAX_PARALLEL_HTTP=6 # Reduce Composer parallelism to work around Github Actions network errors
 
 DEPENDENCY_PACKAGE_DIR=$(pwd)
-ls
+DEPENDENCY_PACKAGE_NAME=$(jq -r '.["name"]' "${DEPENDENCY_PACKAGE_DIR}/composer.json")
+ls $DEPENDENCY_PACKAGE_NAME
 
 echo '> Preparing project containers using the following setup:'
 echo "- PROJECT_BUILD_DIR=${PROJECT_BUILD_DIR}"
@@ -31,9 +32,9 @@ echo "> Setting up skeleton"
 docker exec install_dependencies composer create-project ibexa/${PROJECT_EDITION}-skeleton:${PROJECT_VERSION} . --no-install
 
 # Copy auth.json if needed
-if [ -f ./${DEPENDENCY_PACKAGE_DIR}/auth.json ]; then
-    echo "AUTH FILE DETECTED IN ${DEPENDENCY_PACKAGE_DIR}, copying!"
-    cp ${DEPENDENCY_PACKAGE_DIR}/auth.json .
+if [ -f ./${DEPENDENCY_PACKAGE_NAME}/auth.json ]; then
+    echo "AUTH FILE DETECTED IN ${DEPENDENCY_PACKAGE_NAME}, copying!"
+    cp ${DEPENDENCY_PACKAGE_NAME}/auth.json .
 fi
 
 if [[ $PHP_IMAGE == *"8."* && $PROJECT_VERSION == *"v3.3"* ]]; then
