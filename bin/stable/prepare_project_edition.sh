@@ -11,13 +11,15 @@ export COMPOSER_MAX_PARALLEL_HTTP=6 # Reduce Composer parallelism to work around
 echo '> Preparing project containers using the following setup:'
 echo "- PROJECT_BUILD_DIR=${PROJECT_BUILD_DIR}"
 
-# Copy auth.json if needed
+# Create main project dir
+mkdir -p $PROJECT_BUILD_DIR
+
+# Copy auth.json if exists
 if [ -f auth.json ]; then
     cp auth.json $PROJECT_BUILD_DIR/auth.json
 fi
 
-# Go to main project dir
-mkdir -p $PROJECT_BUILD_DIR && cd $PROJECT_BUILD_DIR
+cd $PROJECT_BUILD_DIR
 
 # Create container to install dependencies
 docker run --name install_dependencies -d \
