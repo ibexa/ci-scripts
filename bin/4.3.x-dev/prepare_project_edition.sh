@@ -40,7 +40,7 @@ docker run --name install_dependencies -d \
 ${PHP_IMAGE}
 
 echo "> Setting up website skeleton"
-composer create-project ibexa/website-skeleton:~4.2.0@dev . --no-install
+composer create-project ibexa/website-skeleton:$PROJECT_VERSION . --no-install
 
 # Add other dependencies if required
 if [ -f ${DEPENDENCY_PACKAGE_DIR}/dependencies.json ]; then
@@ -79,7 +79,7 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
         if [[ "$PROJECT_EDITION" == "$EDITION" ]]; then
             break
         fi
-        COMPOSER_JSON_CONTENT=$(curl -s "https://raw.githubusercontent.com/ibexa/$EDITION/4.2/composer.json")
+        COMPOSER_JSON_CONTENT=$(curl -s "https://raw.githubusercontent.com/ibexa/$EDITION/master/composer.json")
         EDITION_PACKAGES=$(echo "$COMPOSER_JSON_CONTENT" | \
             jq -r --arg projectEdition "ibexa/$PROJECT_EDITION" \
             '.require | with_entries(select(.key | contains("ibexa/"))) | with_entries(select(.key == $projectEdition | not )) | keys')
