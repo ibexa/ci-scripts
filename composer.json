@@ -10,7 +10,7 @@
         "symfony/console": "^5.2",
         "symfony/serializer": "^5.2",
         "symfony/property-access": "^5.2",
-        "czproject/git-php": "^3.18",
+        "czproject/git-php": "^4.0.3",
         "knplabs/github-api": "^3.0",
         "php-http/guzzle6-adapter": "^2.0",
         "guzzlehttp/guzzle": "^6.5",
