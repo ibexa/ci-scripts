@@ -19,7 +19,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Ibexa\\Platform\\ContiniousIntegrationScripts\\": "src/"
+            "Ibexa\\ContiniousIntegrationScripts\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Ibexa\\Tests\\ContiniousIntegrationScripts\\": "tests/"
         }
     },
     "extra": {
@@ -32,11 +37,15 @@
     ],
     "require-dev": {
         "ezsystems/ezplatform-code-style": "^1.0@dev",
-        "phpstan/phpstan": "~0.12"
+        "phpstan/phpstan": "~0.12",
+        "phpunit/phpunit": "^9.5",
+        "mikey179/vfsstream": "^1.6"
     },
     "scripts": {
         "phpstan": "phpstan analyse -c phpstan.neon",
         "phpstan-baseline": "phpstan analyse -c phpstan.neon --generate-baseline",
-        "fix-cs": "php-cs-fixer fix -v --show-progress=estimating"
+        "fix-cs": "php-cs-fixer fix -v --show-progress=estimating",
+        "check-cs": "@fix-cs --dry-run",
+        "test": "phpunit -c phpunit.xml"
     }
 }

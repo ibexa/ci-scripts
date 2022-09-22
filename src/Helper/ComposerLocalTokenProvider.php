@@ -6,11 +6,11 @@
  */
 declare(strict_types=1);
 
-namespace Ibexa\Platform\ContiniousIntegrationScripts\Helper;
+namespace Ibexa\ContiniousIntegrationScripts\Helper;
 
-class ComposerHelper
+class ComposerLocalTokenProvider
 {
-    public static function getGitHubToken(): ?string
+    public function getGitHubToken(): ?string
     {
         $output = [];
         $result_code = 0;

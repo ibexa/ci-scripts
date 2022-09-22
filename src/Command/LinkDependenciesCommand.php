@@ -6,17 +6,19 @@
  */
 declare(strict_types=1);
 
-namespace Ibexa\Platform\ContiniousIntegrationScripts\Command;
+namespace Ibexa\ContiniousIntegrationScripts\Command;
 
+use Github\AuthMethod;
 use Github\Client;
-use Ibexa\Platform\ContiniousIntegrationScripts\Helper\ComposerHelper;
-use Ibexa\Platform\ContiniousIntegrationScripts\ValueObject\ComposerPullRequestData;
-use Ibexa\Platform\ContiniousIntegrationScripts\ValueObject\Dependencies;
+use Ibexa\ContiniousIntegrationScripts\Helper\ComposerLocalTokenProvider;
+use Ibexa\ContiniousIntegrationScripts\ValueObject\ComposerPullRequestData;
+use Ibexa\ContiniousIntegrationScripts\ValueObject\Dependencies;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Filesystem\Path;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -34,10 +36,24 @@ class LinkDependenciesCommand extends Command
     /** @var string[] */
     private $pullRequestUrls;
 
-    public function __construct()
+    /** @var \Github\Client */
+    private $githubClient;
+
+    /** @var string */
+    private $outputDirectory;
+
+    /**
+     * @var \Ibexa\ContiniousIntegrationScripts\Helper\ComposerLocalTokenProvider
+     */
+    private $tokenProvider;
+
+    public function __construct($outputDirectory = null, ComposerLocalTokenProvider $tokenProvider = null)
     {
         parent::__construct();
         $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+        $this->githubClient = new Client();
+        $this->outputDirectory = $outputDirectory ?? '.';
+        $this->tokenProvider = $tokenProvider ?? new ComposerLocalTokenProvider();
     }
 
     public function execute(InputInterface $input, OutputInterface $output): int
@@ -63,12 +79,11 @@ class LinkDependenciesCommand extends Command
 
     private function getPullRequestData(string $owner, string $repository, int $prNumber): ComposerPullRequestData
     {
-        $client = new Client();
         if ($this->token) {
-            $client->authenticate($this->token, null, Client::AUTH_ACCESS_TOKEN);
+            $this->githubClient->authenticate($this->token, null, AuthMethod::ACCESS_TOKEN);
         }
 
-        $pullRequestDetails = $client->pullRequests()->show($owner, $repository, $prNumber);
+        $pullRequestDetails = $this->githubClient->pullRequests()->show($owner, $repository, $prNumber);
 
         $pullRequestData = new ComposerPullRequestData();
         $pullRequestData->repositoryUrl = $pullRequestDetails['head']['repo']['html_url'];
@@ -76,7 +91,12 @@ class LinkDependenciesCommand extends Command
         $branchName = $pullRequestDetails['head']['ref'];
         $targetBranch = $pullRequestDetails['base']['ref'];
 
-        $composerData = json_decode($client->repos()->contents()->download($owner, $repository, 'composer.json', $targetBranch), true);
+        $composerData = json_decode(
+            $this->githubClient->repos()->contents()->download($owner, $repository, 'composer.json', $targetBranch),
+            true,
+            512,
+            JSON_THROW_ON_ERROR
+        );
 
         $aliases = array_keys($composerData['extra']['branch-alias']);
         $branchAlias = $composerData['extra']['branch-alias'][$aliases[0]];
@@ -92,7 +112,7 @@ class LinkDependenciesCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         if (!$input->getArgument('token')) {
-            $input->setArgument('token', ComposerHelper::getGitHubToken());
+            $input->setArgument('token', $this->tokenProvider->getGitHubToken());
         }
 
         $relatedPRsNumber = $io->ask('Please enter the number of related Pull Requests', '1', static function ($number) {
@@ -122,7 +142,7 @@ class LinkDependenciesCommand extends Command
     private function createDependenciesFile(Dependencies $dependencies, SymfonyStyle $io): void
     {
         $jsonContent = $this->serializer->serialize($dependencies, 'json', ['json_encode_options' => JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT]);
-        file_put_contents(self::DEPENDENCIES_FILE, $jsonContent);
+        file_put_contents(Path::join($this->outputDirectory, self::DEPENDENCIES_FILE), $jsonContent);
         $io->success(sprintf('Successfully generated %s file', self::DEPENDENCIES_FILE));
     }
 
