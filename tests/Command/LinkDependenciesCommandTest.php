@@ -22,6 +22,26 @@ class LinkDependenciesCommandTest extends TestCase
     /** @var \Symfony\Component\Console\Tester\CommandTester */
     private $commandTester;
 
+    private const EXPECTED_FILE_CONTENT = <<<FILE
+    {
+        "recipesEndpoint": "https://api.github.com/repos/ibexa/recipes-dev/contents/index.json?ref=flex/pull-24",
+        "packages": [
+            {
+                "requirement": "dev-temp_2.3_to_4.2 as 4.2.x-dev",
+                "repositoryUrl": "https://github.com/ibexa/admin-ui",
+                "package": "ibexa/admin-ui",
+                "shouldBeAddedAsVCS": false
+            },
+            {
+                "requirement": "dev-known-issue-message as 4.3.x-dev",
+                "repositoryUrl": "https://github.com/ibexa/behat",
+                "package": "ibexa/behat",
+                "shouldBeAddedAsVCS": false
+            }
+        ]
+    }
+    FILE;
+
     /** @var \org\bovigo\vfs\vfsStreamDirectory */
     private $fileSystemRoot;
 
@@ -30,7 +50,9 @@ class LinkDependenciesCommandTest extends TestCase
         $tokenProvider = $this->createMock(ComposerLocalTokenProvider::class);
         $tokenProvider->method('getGithubToken')->willReturn(null);
         $this->fileSystemRoot = vfsStream::setup();
-        $this->commandTester = new CommandTester(new LinkDependenciesCommand($this->fileSystemRoot->url(), $tokenProvider));
+        $this->commandTester = new CommandTester(
+            new LinkDependenciesCommand($this->fileSystemRoot->url(), $tokenProvider)
+        );
     }
 
     public function testGeneratesCorrectDependenciesJsonFile(): void
@@ -45,24 +67,9 @@ class LinkDependenciesCommandTest extends TestCase
         $this->commandTester->execute([]);
 
         Assert::assertTrue($this->fileSystemRoot->hasChild(self::FILENAME));
-        Assert::assertEquals(<<<FILE
-{
-    "recipesEndpoint": "https://api.github.com/repos/ibexa/recipes-dev/contents/index.json?ref=flex/pull-24",
-    "packages": [
-        {
-            "requirement": "dev-temp_2.3_to_4.2 as 4.2.x-dev",
-            "repositoryUrl": "https://github.com/ibexa/admin-ui",
-            "package": "ibexa/admin-ui",
-            "shouldBeAddedAsVCS": false
-        },
-        {
-            "requirement": "dev-known-issue-message as 4.3.x-dev",
-            "repositoryUrl": "https://github.com/ibexa/behat",
-            "package": "ibexa/behat",
-            "shouldBeAddedAsVCS": false
-        }
-    ]
-}
-FILE, file_get_contents($this->fileSystemRoot->getChild(self::FILENAME)->url()));
+        Assert::assertEquals(
+            self::EXPECTED_FILE_CONTENT,
+            file_get_contents($this->fileSystemRoot->getChild(self::FILENAME)->url())
+        );
     }
 }

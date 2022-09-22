@@ -13,9 +13,9 @@ class ComposerLocalTokenProvider
     public function getGitHubToken(): ?string
     {
         $output = [];
-        $result_code = 0;
-        exec('composer config github-oauth.github.com --global 2> /dev/null', $output, $result_code);
+        $resultCode = 0;
+        exec('composer config github-oauth.github.com --global 2> /dev/null', $output, $resultCode);
 
-        return $result_code === 0 ? $output[0] : null;
+        return $resultCode === 0 ? $output[0] : null;
     }
 }

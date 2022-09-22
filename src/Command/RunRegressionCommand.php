@@ -57,17 +57,21 @@ class RunRegressionCommand extends Command
         }
 
         if (!$input->getArgument('productVersion')) {
-            $productVersion = $io->ask('Please enter the Ibexa DXP version', '4.1', static function (string $answer): string {
-                if (preg_match('/^(\d+)\.(\d+)$/', $answer) === 0) {
-                    throw new \RuntimeException(
-                        sprintf(
-                            'Unrecognised version format: %s. Please use format X.Y instead, e.g. 3.3, 4.0, 4.1',
-                        $answer)
-                    );
-                }
+            $productVersion = $io->ask(
+                'Please enter the Ibexa DXP version',
+                '4.2',
+                static function (string $answer): string {
+                    if (preg_match('/^(\d+)\.(\d+)$/', $answer) === 0) {
+                        throw new \RuntimeException(
+                            sprintf(
+                                'Unrecognised version format: %s. Please use format X.Y instead, e.g. 3.3, 4.2, 4.3',
+                                $answer)
+                        );
+                    }
 
-                return $answer;
-            });
+                    return $answer;
+                }
+            );
 
             $input->setArgument('productVersion', $productVersion);
         }
@@ -145,7 +149,9 @@ class RunRegressionCommand extends Command
 
         $this->waitUntilBranchExists($productEdition, $regressionBranchName);
 
-        $response = $this->githubClient->pullRequests()->create(self::REPO_OWNER, $productEdition,
+        $response = $this->githubClient->pullRequests()->create(
+            self::REPO_OWNER,
+            $productEdition,
             [
                 'title' => 'Run regression for IBX-XXXX',
                 'base' => $baseBranch,
