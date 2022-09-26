@@ -6,12 +6,12 @@
  */
 declare(strict_types=1);
 
-namespace Ibexa\Platform\ContiniousIntegrationScripts\Command;
+namespace Ibexa\ContiniousIntegrationScripts\Command;
 
-use Cz\Git\GitException;
-use Cz\Git\GitRepository;
+use CzProject\GitPhp\Git;
+use CzProject\GitPhp\GitException;
 use Github\Client;
-use Ibexa\Platform\ContiniousIntegrationScripts\Helper\ComposerHelper;
+use Ibexa\ContiniousIntegrationScripts\Helper\ComposerLocalTokenProvider;
 use JsonException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -31,26 +31,47 @@ class RunRegressionCommand extends Command
     /** @var ?string */
     private $token;
 
+    /** @var \Github\Client */
+    private $githubClient;
+
+    /** @var \CzProject\GitPhp\Git */
+    private $repository;
+
+    /** @var \Ibexa\ContiniousIntegrationScripts\Helper\ComposerLocalTokenProvider */
+    private $tokenProvider;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->githubClient = new Client();
+        $this->repository = new Git();
+        $this->tokenProvider = new ComposerLocalTokenProvider();
+    }
+
     protected function interact(InputInterface $input, OutputInterface $output): void
     {
         $io = new SymfonyStyle($input, $output);
 
         if (!$input->getArgument('token')) {
-            $input->setArgument('token', ComposerHelper::getGitHubToken());
+            $input->setArgument('token', $this->tokenProvider->getGitHubToken());
         }
 
         if (!$input->getArgument('productVersion')) {
-            $productVersion = $io->ask('Please enter the Ibexa DXP version', '4.1', static function (string $answer): string {
-                if (preg_match('/^(\d+)\.(\d+)$/', $answer) === 0) {
-                    throw new \RuntimeException(
-                        sprintf(
-                            'Unrecognised version format: %s. Please use format X.Y instead, e.g. 3.3, 4.0, 4.1',
-                        $answer)
-                    );
-                }
+            $productVersion = $io->ask(
+                'Please enter the Ibexa DXP version',
+                '4.2',
+                static function (string $answer): string {
+                    if (preg_match('/^(\d+)\.(\d+)$/', $answer) === 0) {
+                        throw new \RuntimeException(
+                            sprintf(
+                                'Unrecognised version format: %s. Please use format X.Y instead, e.g. 3.3, 4.2, 4.3',
+                                $answer)
+                        );
+                    }
 
-                return $answer;
-            });
+                    return $answer;
+                }
+            );
 
             $input->setArgument('productVersion', $productVersion);
         }
@@ -99,13 +120,13 @@ class RunRegressionCommand extends Command
     private function createRegressionPullRequest(string $productEdition, string $baseBranch, string $regressionBranchName, SymfonyStyle $io): void
     {
         try {
-            $repo = GitRepository::cloneRepository(
+            $repo = $this->repository->cloneRepository(
                 sprintf('git@github.com:%s/%s.git', self::REPO_OWNER, $productEdition),
                 null, ['-b' => $baseBranch]
             );
         } catch (GitException $exception) {
             // fallback to HTTPS if SSH fails
-            $repo = GitRepository::cloneRepository(
+            $repo = $this->repository->cloneRepository(
                 sprintf('https://github.com/%s/%s.git', self::REPO_OWNER, $productEdition),
                 null, ['-b' => $baseBranch]
             );
@@ -118,18 +139,19 @@ class RunRegressionCommand extends Command
 
         $repo->addFile(LinkDependenciesCommand::DEPENDENCIES_FILE);
         $repo->commit(self::COMMIT_MESSAGE);
-        $repo->push('origin', [$regressionBranchName, '-u']);
+        $repo->push(['origin', $regressionBranchName]);
 
         $io->success(sprintf('Successfuly pushed to %s/%s a branch called: %s', self::REPO_OWNER, $productEdition, $regressionBranchName));
 
-        $client = new Client();
         if ($this->token) {
-            $client->authenticate($this->token, null, Client::AUTH_ACCESS_TOKEN);
+            $this->githubClient->authenticate($this->token, null, Client::AUTH_ACCESS_TOKEN);
         }
 
-        $this->waitUntilBranchExists($client, $productEdition, $regressionBranchName);
+        $this->waitUntilBranchExists($productEdition, $regressionBranchName);
 
-        $response = $client->pullRequests()->create(self::REPO_OWNER, $productEdition,
+        $response = $this->githubClient->pullRequests()->create(
+            self::REPO_OWNER,
+            $productEdition,
             [
                 'title' => 'Run regression for IBX-XXXX',
                 'base' => $baseBranch,
@@ -181,13 +203,13 @@ class RunRegressionCommand extends Command
         }
     }
 
-    private function waitUntilBranchExists(Client $client, string $productEdition, string $branchName): void
+    private function waitUntilBranchExists(string $productEdition, string $branchName): void
     {
         $counter = 0;
         $success = false;
         while ($counter < 5) {
             try {
-                $client->repo()->branches(self::REPO_OWNER, $productEdition, $branchName);
+                $this->githubClient->repo()->branches(self::REPO_OWNER, $productEdition, $branchName);
                 $success = true;
                 break;
             } catch (\RuntimeException $e) {
@@ -203,6 +225,6 @@ class RunRegressionCommand extends Command
 
     private function getBaseBranch(string $productVersion): string
     {
-        return $productVersion === "4.2" ? "master" : $productVersion;
+        return $productVersion === '4.3' ? 'master' : $productVersion;
     }
 }

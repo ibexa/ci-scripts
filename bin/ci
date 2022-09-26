@@ -22,7 +22,7 @@ if (!class_exists('Symfony\Component\Console\Application', true)) {
 
 $application = new Symfony\Component\Console\Application;
 
-$application->add(new Ibexa\Platform\ContiniousIntegrationScripts\Command\LinkDependenciesCommand());
-$application->add(new Ibexa\Platform\ContiniousIntegrationScripts\Command\RunRegressionCommand());
+$application->add(new Ibexa\ContiniousIntegrationScripts\Command\LinkDependenciesCommand());
+$application->add(new Ibexa\ContiniousIntegrationScripts\Command\RunRegressionCommand());
 
 $application->run();

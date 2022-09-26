@@ -6,7 +6,7 @@
  */
 declare(strict_types=1);
 
-namespace Ibexa\Platform\ContiniousIntegrationScripts\ValueObject;
+namespace Ibexa\ContiniousIntegrationScripts\ValueObject;
 
 class ComposerPullRequestData
 {
