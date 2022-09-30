@@ -107,10 +107,10 @@ class RunRegressionCommand extends Command
 
         $this->validate();
 
-        $baseBranch = $this->getBaseBranch($productVersion);
         $regressionBranchName = uniqid('tmp_regression_', true);
 
         foreach ($productEditions as $productEdition) {
+            $baseBranch = $this->getBaseBranch($productEdition, $productVersion);
             $this->createRegressionPullRequest($productEdition, $baseBranch, $regressionBranchName, $io);
         }
 
@@ -223,8 +223,14 @@ class RunRegressionCommand extends Command
         }
     }
 
-    private function getBaseBranch(string $productVersion): string
+    private function getBaseBranch($productEdition, string $productVersion): string
     {
-        return $productVersion === '4.3' ? 'master' : $productVersion;
+        try {
+            $this->githubClient->repo()->branches(self::REPO_OWNER, $productEdition, $productVersion);
+
+            return $productVersion;
+        } catch (\RuntimeException $e) {
+            return 'master';
+        }
     }
 }
