@@ -118,14 +118,16 @@ if [ -f dependencies.json ]; then
         jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
         mv composer.json.new composer.json
     done
+    COMPOSER_MAX_PARALLEL_HTTP=1
 fi
 
 # Install correct product variant
-docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts
+docker exec -e COMPOSER_MAX_PARALLEL_HTTP install_dependencies echo $COMPOSER_MAX_PARALLEL_HTTP
+docker exec -e COMPOSER_MAX_PARALLEL_HTTP install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts
 # Init a repository to avoid Composer asking questions
 git init; git add . > /dev/null;
 # Execute recipes
-docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force --reset
+docker exec -e COMPOSER_MAX_PARALLEL_HTTP install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force --reset
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
 sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/bundles.php
