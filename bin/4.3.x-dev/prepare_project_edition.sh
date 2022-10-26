@@ -140,6 +140,11 @@ cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
 docker container stop install_dependencies
 docker container rm install_dependencies
 
+# Set up Percy visual testing base branch
+IFS='.' read -ra VERSION_NUMBERS <<< "$PROJECT_VERSION"
+VERSION="${VERSION_NUMBERS[0]}.${VERSION_NUMBERS[1]}/$PROJECT_EDITION"
+export PERCY_BRANCH=$VERSION
+
 echo "> Start docker containers specified by ${COMPOSE_FILE}"
 docker-compose --env-file=.env up -d
 
