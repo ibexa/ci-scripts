@@ -27,7 +27,7 @@ docker run --name install_dependencies -d \
 ${PHP_IMAGE}
 
 echo "> Setting up skeleton"
-docker exec install_dependencies composer create-project ibexa/${PROJECT_EDITION}-skeleton:${PROJECT_VERSION} . --no-install
+docker exec install_dependencies composer create-project ibexa/${PROJECT_EDITION}-skeleton:${PROJECT_VERSION} . --no-install --ansi
 
 # Copy auth.json if needed
 if [ -f ${DEPENDENCY_PACKAGE_DIR}/auth.json ]; then
@@ -37,18 +37,18 @@ fi
 if [[ $PHP_IMAGE == *"8."* && $PROJECT_VERSION == *"v3.3"* ]]; then
     # See "Using PHP 8": https://doc.ibexa.co/en/3.3/getting_started/install_ez_platform/#set-up-authentication-tokens
     echo "> Running composer update"
-    docker exec install_dependencies composer update --no-scripts
+    docker exec install_dependencies composer update --no-scripts --ansi
 else
     echo "> Running composer install"
-    docker exec install_dependencies composer install --no-scripts
+    docker exec install_dependencies composer install --no-scripts --ansi
 fi
 
 if [[ $PROJECT_VERSION == *"v3.3"* ]]; then
     echo "> Installing dependencies for 3.3"
-    docker exec install_dependencies composer require ezsystems/behatbundle:^8.3 ibexa/docker:$PROJECT_VERSION --no-scripts
+    docker exec install_dependencies composer require ezsystems/behatbundle:^8.3 ibexa/docker:$PROJECT_VERSION --no-scripts --ansi
 else
     echo "> Installing dependencies for v4"
-    docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts
+    docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --ansi
 fi
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
@@ -71,7 +71,7 @@ docker-compose --env-file=.env exec -T app sh -c 'chown -R www-data:www-data /va
 # Rebuild container
 docker-compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cache/*"
 echo '> Clear cache & generate assets'
-docker-compose --env-file=.env exec -T --user www-data app sh -c "composer run post-install-cmd"
+docker-compose --env-file=.env exec -T --user www-data app sh -c "composer run post-install-cmd --ansi"
 
 echo '> Install data'
 docker-compose --env-file=.env exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install"
