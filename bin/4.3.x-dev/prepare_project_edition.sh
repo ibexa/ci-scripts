@@ -40,7 +40,7 @@ docker run --name install_dependencies -d \
 ${PHP_IMAGE}
 
 echo "> Setting up website skeleton"
-composer create-project ibexa/website-skeleton:$PROJECT_VERSION . --no-install
+composer create-project ibexa/website-skeleton:$PROJECT_VERSION . --no-install --ansi
 
 # Add other dependencies if required
 if [ -f ${DEPENDENCY_PACKAGE_DIR}/dependencies.json ]; then
@@ -54,7 +54,7 @@ if [ -f ${DEPENDENCY_PACKAGE_DIR}/dependencies.json ]; then
     fi
 fi
 
-docker exec install_dependencies composer update
+docker exec install_dependencies composer update --ansi
 
 # Move dependency to directory available for docker volume
 echo "> Move ${DEPENDENCY_PACKAGE_DIR} to ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}"
@@ -101,7 +101,7 @@ JSON_STRING=$( jq -n \
 composer config repositories.localDependency "$JSON_STRING"
 
 # Install Behat and Docker packages
-docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --no-update
+docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --no-update --ansi
 
 # Add other dependencies if required
 if [ -f dependencies.json ]; then
@@ -121,11 +121,11 @@ if [ -f dependencies.json ]; then
 fi
 
 # Install correct product variant
-docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts
+docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
 # Init a repository to avoid Composer asking questions
 git init; git add . > /dev/null;
 # Execute recipes
-docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force --reset
+docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force --reset --ansi
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
 sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/bundles.php
@@ -150,7 +150,7 @@ docker-compose --env-file=.env exec -T app sh -c 'chown -R www-data:www-data /va
 # Rebuild container
 docker-compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cache/*"
 echo '> Clear cache & generate assets'
-docker-compose --env-file=.env exec -T --user www-data app sh -c "composer run post-install-cmd"
+docker-compose --env-file=.env exec -T --user www-data app sh -c "composer run post-install-cmd --ansi"
 
 echo '> Install data'
 docker-compose --env-file=.env exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install"
