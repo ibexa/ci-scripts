@@ -33,7 +33,7 @@ class LinkDependenciesCommandTest extends TestCase
                 "shouldBeAddedAsVCS": false
             },
             {
-                "requirement": "dev-known-issue-message as 4.3.x-dev",
+                "requirement": "dev-ibx-3842-extend-product-tests as 4.2.x-dev",
                 "repositoryUrl": "https://github.com/ibexa/behat",
                 "package": "ibexa/behat",
                 "shouldBeAddedAsVCS": false
@@ -61,7 +61,7 @@ class LinkDependenciesCommandTest extends TestCase
             '3',
             'https://github.com/ibexa/admin-ui/pull/577',
             'https://github.com/ibexa/recipes-dev/pull/24',
-            'https://github.com/ibexa/behat/pull/37',
+            'https://github.com/ibexa/behat/pull/46',
         ]);
 
         $this->commandTester->execute([]);
