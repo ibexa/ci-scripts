@@ -89,10 +89,12 @@ class LinkDependenciesCommand extends Command
         $pullRequestData->repositoryUrl = $pullRequestDetails['head']['repo']['html_url'];
         $pullRequestData->shouldBeAddedAsVCS = $pullRequestDetails['head']['repo']['private'] || $pullRequestDetails['head']['repo']['fork'];
         $branchName = $pullRequestDetails['head']['ref'];
+        $targetOwner = $pullRequestDetails['base']['repo']['owner']['login'];
+        $targetRepository = $pullRequestDetails['base']['repo']['name'];
         $targetBranch = $pullRequestDetails['base']['ref'];
 
         $composerData = json_decode(
-            $this->githubClient->repos()->contents()->download($owner, $repository, 'composer.json', $targetBranch),
+            $this->githubClient->repos()->contents()->download($targetOwner, $targetRepository, 'composer.json', $targetBranch),
             true,
             512,
             JSON_THROW_ON_ERROR
