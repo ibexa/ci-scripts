@@ -99,6 +99,7 @@ JSON_STRING=$( jq -n \
                   '{"type": "path", "url": $packageDir, "options": { "symlink": false , "versions": { ($packageName): $packageVersion}}}' )
 
 composer config repositories.localDependency "$JSON_STRING"
+composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_VERSION" --no-update
 
 # Install Behat and Docker packages
 docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --no-update --ansi
@@ -139,6 +140,11 @@ cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
 # Depenencies are installed and container can be removed
 docker container stop install_dependencies
 docker container rm install_dependencies
+
+# Set up Percy visual testing base branch
+IFS='.' read -ra VERSION_NUMBERS <<< "$PROJECT_VERSION"
+VERSION="${VERSION_NUMBERS[0]}.${VERSION_NUMBERS[1]}/$PROJECT_EDITION"
+export PERCY_BRANCH=$VERSION
 
 echo "> Start docker containers specified by ${COMPOSE_FILE}"
 docker-compose --env-file=.env up -d
