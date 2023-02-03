@@ -122,7 +122,7 @@ if [ -f dependencies.json ]; then
 fi
 
 # Install correct product variant
-docker exec install_dependencies composer require phpunit:^9.0 ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
+docker exec install_dependencies composer require phpunit/phpunit:^9.0 ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
 # Init a repository to avoid Composer asking questions
 git init; git add . > /dev/null;
 # Execute recipes

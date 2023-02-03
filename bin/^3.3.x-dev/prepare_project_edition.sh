@@ -100,7 +100,7 @@ JSON_STRING=$( jq -n \
 composer config repositories.localDependency "$JSON_STRING"
 
 # Install Behat and Docker packages
-docker exec install_dependencies composer require phpunit:^9.0 ezsystems/behatbundle:^8.3.x-dev ibexa/docker:$PROJECT_VERSION --no-scripts --no-update --ansi
+docker exec install_dependencies composer require phpunit/phpunit:^9.0 ezsystems/behatbundle:^8.3.x-dev ibexa/docker:$PROJECT_VERSION --no-scripts --no-update --ansi
 
 # Add other dependencies if required
 if [ -f dependencies.json ]; then
