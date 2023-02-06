@@ -102,7 +102,7 @@ composer config repositories.localDependency "$JSON_STRING"
 composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_VERSION" --no-update
 
 # Install Behat and Docker packages
-docker exec install_dependencies composer require phpunit/phpunit:^9.0 ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --no-update --ansi
+docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --no-update --ansi
 
 # Add other dependencies if required
 if [ -f dependencies.json ]; then
