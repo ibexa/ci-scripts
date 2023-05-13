@@ -65,7 +65,8 @@ class RunRegressionCommand extends Command
                         throw new \RuntimeException(
                             sprintf(
                                 'Unrecognised version format: %s. Please use format X.Y instead, e.g. 3.3, 4.4, 4.5',
-                                $answer)
+                                $answer
+                            )
                         );
                     }
 
@@ -117,13 +118,15 @@ class RunRegressionCommand extends Command
         try {
             $repo = $this->repository->cloneRepository(
                 sprintf('git@github.com:%s/%s.git', self::REPO_OWNER, $productEdition),
-                null, ['-b' => $baseBranch]
+                null,
+                ['-b' => $baseBranch]
             );
         } catch (GitException $exception) {
             // fallback to HTTPS if SSH fails
             $repo = $this->repository->cloneRepository(
                 sprintf('https://github.com/%s/%s.git', self::REPO_OWNER, $productEdition),
-                null, ['-b' => $baseBranch]
+                null,
+                ['-b' => $baseBranch]
             );
         }
 
@@ -153,7 +156,8 @@ class RunRegressionCommand extends Command
                 'head' => $regressionBranchName,
                 'body' => 'Please add your description here.',
                 'draft' => 'true',
-            ]);
+            ]
+        );
 
         $io->success(sprintf('Created PR, please see: %s', $response['_links']['html']['href']));
 
@@ -218,7 +222,7 @@ class RunRegressionCommand extends Command
         }
     }
 
-    private function getBaseBranch($productEdition, string $productVersion): string
+    private function getBaseBranch(string $productEdition, string $productVersion): string
     {
         try {
             $this->githubClient->repo()->branches(self::REPO_OWNER, $productEdition, $productVersion);
@@ -229,7 +233,11 @@ class RunRegressionCommand extends Command
         }
     }
 
-    private static function validateEditions(array $editions): void {
+    /**
+     * @param iterable<string> $editions
+     */
+    private static function validateEditions(iterable $editions): void
+    {
         foreach ($editions as $edition) {
             if (!in_array($edition, self::PRODUCT_EDITIONS)) {
                 throw new \RuntimeException(
