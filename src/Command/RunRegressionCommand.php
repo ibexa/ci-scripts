@@ -79,17 +79,7 @@ class RunRegressionCommand extends Command
         if (!$input->getArgument('productEditions')) {
             $productEditions = $io->ask('Please enter the Ibexa DXP edition(s)', 'oss', static function (string $answer): array {
                 $editions = explode(',', $answer);
-                foreach ($editions as $edition) {
-                    if (!in_array($edition, self::PRODUCT_EDITIONS)) {
-                        throw new \RuntimeException(
-                            sprintf(
-                                'Unrecognised edition: %s. Please choose one of: %s',
-                                $edition,
-                                implode(',', self::PRODUCT_EDITIONS)
-                            )
-                        );
-                    }
-                }
+                self::validateEditions($editions);
 
                 return $editions;
             });
@@ -104,6 +94,11 @@ class RunRegressionCommand extends Command
         $this->token = $input->getArgument('token');
         $productVersion = $input->getArgument('productVersion');
         $productEditions = $input->getArgument('productEditions');
+
+        if (!is_array($productEditions)) {
+            $productEditions = explode(',', $productEditions);
+            $this->validateEditions($productEditions);
+        }
 
         $this->validate();
 
@@ -231,6 +226,20 @@ class RunRegressionCommand extends Command
             return $productVersion;
         } catch (\RuntimeException $e) {
             return 'master';
+        }
+    }
+
+    private static function validateEditions(array $editions): void {
+        foreach ($editions as $edition) {
+            if (!in_array($edition, self::PRODUCT_EDITIONS)) {
+                throw new \RuntimeException(
+                    sprintf(
+                        'Unrecognised edition: %s. Please choose one of: %s',
+                        $edition,
+                        implode(',', self::PRODUCT_EDITIONS)
+                    )
+                );
+            }
         }
     }
 }
