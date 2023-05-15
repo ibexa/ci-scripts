@@ -1,22 +1,12 @@
 parameters:
 	ignoreErrors:
 		-
+			message: "#^Offset 'base' does not exist on array\\|string\\.$#"
+			count: 3
+			path: src/Command/LinkDependenciesCommand.php
+
+		-
 			message: "#^Offset 'head' does not exist on array\\|string\\.$#"
-			count: 2
+			count: 4
 			path: src/Command/LinkDependenciesCommand.php
-
-		-
-			message: "#^Property Ibexa\\\\Platform\\\\ContiniousIntegrationScripts\\\\Command\\\\LinkDependenciesCommand\\:\\:\\$token \\(string\\|null\\) does not accept array\\<string\\>\\|string\\|null\\.$#"
-			count: 1
-			path: src/Command/LinkDependenciesCommand.php
-
-		-
-			message: "#^Parameter \\#1 \\$productVersion of method Ibexa\\\\Platform\\\\ContiniousIntegrationScripts\\\\Command\\\\RunRegressionCommand\\:\\:mapProductVersionToPageBuilder\\(\\) expects string, array\\<string\\>\\|string\\|null given\\.$#"
-			count: 1
-			path: src/Command/RunRegressionCommand.php
-
-		-
-			message: "#^Property Ibexa\\\\Platform\\\\ContiniousIntegrationScripts\\\\Command\\\\RunRegressionCommand\\:\\:\\$token \\(string\\|null\\) does not accept array\\<string\\>\\|string\\|null\\.$#"
-			count: 1
-			path: src/Command/RunRegressionCommand.php
 

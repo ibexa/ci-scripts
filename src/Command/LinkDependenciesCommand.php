@@ -47,7 +47,7 @@ class LinkDependenciesCommand extends Command
      */
     private $tokenProvider;
 
-    public function __construct($outputDirectory = null, ComposerLocalTokenProvider $tokenProvider = null)
+    public function __construct(string $outputDirectory = null, ComposerLocalTokenProvider $tokenProvider = null)
     {
         parent::__construct();
         $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
@@ -175,9 +175,10 @@ class LinkDependenciesCommand extends Command
     private function getRecipesEndpointUrl(string $owner, string $repository, int $prNumber): string
     {
         return sprintf(
-                'https://api.github.com/repos/%s/%s/contents/index.json?ref=flex/pull-%d',
-                $owner,
-                $repository,
-                $prNumber);
+            'https://api.github.com/repos/%s/%s/contents/index.json?ref=flex/pull-%d',
+            $owner,
+            $repository,
+            $prNumber
+        );
     }
 }
