@@ -26,7 +26,7 @@ class RunRegressionCommand extends Command
 
     private const COMMIT_MESSAGE = '[TMP] Run regression';
 
-    private const PRODUCT_EDITIONS = ['oss', 'content', 'experience', 'commerce'];
+    private const PRODUCT_EDITIONS = ['oss', 'content', 'headless', 'experience', 'commerce'];
 
     /** @var ?string */
     private $token;
