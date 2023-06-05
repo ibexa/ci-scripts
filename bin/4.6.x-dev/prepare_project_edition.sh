@@ -72,7 +72,7 @@ fi
 if [[ "$PROJECT_EDITION" != "oss" ]]; then
     composer config repositories.ibexa composer https://updates.ibexa.co
 
-    editions=(commerce experience content)
+    editions=(commerce experience headless)
 
     IBEXA_PACKAGES="[]"
     for EDITION in "${editions[@]}"; do
