@@ -101,9 +101,6 @@ JSON_STRING=$( jq -n \
 composer config repositories.localDependency "$JSON_STRING"
 composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_VERSION" --no-update
 
-# Install Behat and Docker packages
-docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --no-update --ansi
-
 # Add other dependencies if required
 if [ -f dependencies.json ]; then
     COUNT=$(cat dependencies.json | jq '.packages | length' )
@@ -127,6 +124,9 @@ docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PRO
 git init; git add . > /dev/null;
 # Execute recipes
 docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force --reset --ansi
+
+# Install Behat and Docker packages
+docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --ansi
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
 sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/bundles.php
