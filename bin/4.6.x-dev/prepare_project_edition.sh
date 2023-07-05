@@ -120,8 +120,10 @@ fi
 
 # Install correct product variant
 docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
+
 # Init a repository to avoid Composer asking questions
-git init; git add . > /dev/null;
+docker exec install_dependencies git config --global --add safe.directory /var/www && git init && git add .
+
 # Execute recipes
 docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force --reset --ansi
 
