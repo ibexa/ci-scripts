@@ -5,7 +5,7 @@ PROJECT_EDITION=$1
 PROJECT_VERSION=$2
 PROJECT_BUILD_DIR=${HOME}/build/project
 export COMPOSE_FILE=$3
-export PHP_IMAGE=${4-ghcr.io/ibexa/docker/php:7.4-node18}
+export PHP_IMAGE=${4-ghcr.io/ibexa/docker/php:8.1-node18}
 export COMPOSER_MAX_PARALLEL_HTTP=6 # Reduce Composer parallelism to work around Github Actions network errors
 
 if [[ -n "${DOCKER_PASSWORD}" ]]; then
