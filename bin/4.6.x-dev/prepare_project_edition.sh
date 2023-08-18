@@ -101,6 +101,18 @@ JSON_STRING=$( jq -n \
 composer config repositories.localDependency "$JSON_STRING"
 composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_VERSION" --no-update
 
+# Install correct product variant
+docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
+
+# Init a repository to avoid Composer asking questions
+docker exec install_dependencies git config --global --add safe.directory /var/www && git init && git add .
+
+# Execute recipes
+docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force --reset --ansi
+
+# Install Behat and Docker packages
+docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --ansi
+
 # Add other dependencies if required
 if [ -f dependencies.json ]; then
     COUNT=$(cat dependencies.json | jq '.packages | length' )
@@ -116,19 +128,12 @@ if [ -f dependencies.json ]; then
         jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
         mv composer.json.new composer.json
     done
+    docker exec install_dependencies composer update --no-scripts
+
+    # Execute Behat and Docker recipes again
+    docker exec install_dependencies composer recipes:install ibexa/behat --force --reset --ansi
+    docker exec install_dependencies composer recipes:install ibexa/docker --force --reset --ansi
 fi
-
-# Install correct product variant
-docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
-
-# Init a repository to avoid Composer asking questions
-docker exec install_dependencies git config --global --add safe.directory /var/www && git init && git add .
-
-# Execute recipes
-docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force --reset --ansi
-
-# Install Behat and Docker packages
-docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --ansi
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
 sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/bundles.php
