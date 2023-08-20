@@ -111,7 +111,7 @@ docker exec install_dependencies git config --global --add safe.directory /var/w
 docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force --reset --ansi
 
 # Install Behat and Docker packages
-docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --ansi
+docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --ansi --no-update
 
 # Add other dependencies if required
 if [ -f dependencies.json ]; then
@@ -128,12 +128,9 @@ if [ -f dependencies.json ]; then
         jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
         mv composer.json.new composer.json
     done
-    docker exec install_dependencies composer update --no-scripts
-
-    # Execute Behat and Docker recipes again
-    docker exec install_dependencies composer recipes:install ibexa/behat --force --reset --ansi
-    docker exec install_dependencies composer recipes:install ibexa/docker --force --reset --ansi
 fi
+
+docker exec install_dependencies composer update --no-scripts
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
 sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/bundles.php
