@@ -128,6 +128,9 @@ docker exec install_dependencies git config --global --add safe.directory /var/w
 # Execute recipes
 docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force --reset --ansi
 
+#Set Ibexa Error handler
+docker exec install_dependencies composer config extra.runtime.error_handler "\\Ibexa\\Behat\\ErrorHandler\\IbexaErrorHandler"
+
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
 sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/bundles.php
 
