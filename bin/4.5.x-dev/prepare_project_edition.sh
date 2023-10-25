@@ -169,6 +169,9 @@ docker-compose --env-file=.env exec -T --user www-data app sh -c "composer run p
 
 echo '> Install data'
 docker-compose --env-file=.env exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install --skip-indexing"
+if [[ "$COMPOSE_FILE" == *"elastic.yml"* ]]; then
+    docker-compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:elasticsearch:put-index-template"
+fi
 docker-compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:reindex"
 
 echo '> Generate GraphQL schema'
