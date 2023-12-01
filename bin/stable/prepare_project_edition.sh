@@ -48,6 +48,8 @@ if [[ $PROJECT_VERSION == *"v3.3"* ]]; then
 else
     echo "> Installing dependencies for v4"
     docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
+    docker exec install_dependencies composer config repositories.visual vcs https://github.com/ibexa/visual-testing
+    docker exec install_dependencies composer require ibexa/visual-testing:~4.6.x-dev --with-all-dependencies --no-scripts --ansi
 fi
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
@@ -59,6 +61,10 @@ cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
 # Depenencies are installed and container can be removed
 docker container stop install_dependencies
 docker container rm install_dependencies
+
+# Set up Percy visual testing base branch
+VERSION="4.6/$PROJECT_EDITION"
+export PERCY_BRANCH=$VERSION
 
 echo "> Start docker containers specified by ${COMPOSE_FILE}"
 docker-compose --env-file=.env up -d
@@ -80,3 +86,7 @@ echo '> Generate GraphQL schema'
 docker-compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
 
 echo '> Done, ready to run tests'
+
+docker ps -a
+
+docker logs ibexa_percy_1
