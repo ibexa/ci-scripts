@@ -109,6 +109,7 @@ docker exec install_dependencies git config --global --add safe.directory /var/w
 
 # Execute recipes
 docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force --reset --ansi
+docker exec install_dependencies composer recipes:install ${DEPENDENCY_PACKAGE_NAME} --force --reset --ansi
 
 # Install Behat and Docker packages
 docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --ansi --no-update
