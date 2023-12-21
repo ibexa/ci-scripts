@@ -104,6 +104,24 @@ JSON_STRING=$( jq -n \
 composer config repositories.localDependency "$JSON_STRING"
 composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_VERSION" --no-update
 
+# Add other dependencies if required
+if [ -f dependencies.json ]; then
+    echo "> Make composer use related dependencies (from dependencies.json)"
+    COUNT=$(cat dependencies.json | jq '.packages | length' )
+    for ((i=0;i<$COUNT;i++)); do
+        PACKAGE_NAME=$(cat dependencies.json | jq -r .packages[$i].package)
+        REQUIREMENT=$(cat dependencies.json | jq -r .packages[$i].requirement)
+        SHOULD_BE_ADDED_AS_VCS=$(cat dependencies.json | jq -r .packages[$i].shouldBeAddedAsVCS)
+        if [[ $SHOULD_BE_ADDED_AS_VCS == "true" ]] ; then
+            echo ">> Private or fork repository detected, adding VCS to Composer repositories"
+            REPO_URL=$(cat dependencies.json | jq -r .packages[$i].repositoryUrl)
+            docker exec $PROJECT_BUILDER_CONTAINER_NAME composer config repositories.$(uuidgen) vcs "$REPO_URL"
+        fi
+        jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
+        mv composer.json.new composer.json
+    done
+fi
+
 # Install correct product variant
 docker exec $PROJECT_BUILDER_CONTAINER_NAME composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
 
@@ -116,23 +134,6 @@ docker exec $PROJECT_BUILDER_CONTAINER_NAME composer recipes:install ${DEPENDENC
 
 # Install Behat and Docker packages
 docker exec $PROJECT_BUILDER_CONTAINER_NAME composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --ansi --no-update
-
-# Add other dependencies if required
-if [ -f dependencies.json ]; then
-    COUNT=$(cat dependencies.json | jq '.packages | length' )
-    for ((i=0;i<$COUNT;i++)); do
-        PACKAGE_NAME=$(cat dependencies.json | jq -r .packages[$i].package)
-        REQUIREMENT=$(cat dependencies.json | jq -r .packages[$i].requirement)
-        SHOULD_BE_ADDED_AS_VCS=$(cat dependencies.json | jq -r .packages[$i].shouldBeAddedAsVCS)
-        if [[ $SHOULD_BE_ADDED_AS_VCS == "true" ]] ; then 
-            echo ">> Private or fork repository detected, adding VCS to Composer repositories"
-            REPO_URL=$(cat dependencies.json | jq -r .packages[$i].repositoryUrl)
-            docker exec $PROJECT_BUILDER_CONTAINER_NAME composer config repositories.$(uuidgen) vcs "$REPO_URL"
-        fi
-        jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
-        mv composer.json.new composer.json
-    done
-fi
 
 docker exec $PROJECT_BUILDER_CONTAINER_NAME composer update --no-scripts
 
