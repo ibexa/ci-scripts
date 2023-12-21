@@ -121,12 +121,12 @@ docker exec $PROJECT_BUILDER_CONTAINER_NAME composer require ibexa/behat:$PROJEC
 if [ -f dependencies.json ]; then
     COUNT=$(cat dependencies.json | jq '.packages | length' )
     for ((i=0;i<$COUNT;i++)); do
-        REPO_URL=$(cat dependencies.json | jq -r .packages[$i].repositoryUrl)
         PACKAGE_NAME=$(cat dependencies.json | jq -r .packages[$i].package)
         REQUIREMENT=$(cat dependencies.json | jq -r .packages[$i].requirement)
         SHOULD_BE_ADDED_AS_VCS=$(cat dependencies.json | jq -r .packages[$i].shouldBeAddedAsVCS)
         if [[ $SHOULD_BE_ADDED_AS_VCS == "true" ]] ; then 
             echo ">> Private or fork repository detected, adding VCS to Composer repositories"
+            REPO_URL=$(cat dependencies.json | jq -r .packages[$i].repositoryUrl)
             docker exec $PROJECT_BUILDER_CONTAINER_NAME composer config repositories.$(uuidgen) vcs "$REPO_URL"
         fi
         jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
