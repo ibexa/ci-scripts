@@ -3,7 +3,7 @@ set -e
 
 PROJECT_EDITION=$1
 PROJECT_VERSION=$2
-PROJECT_BUILD_DIR=/tmp/rest-functional/build
+PROJECT_BUILD_DIR=${PROJECT_BUILD_DIR:-${HOME}/build/project}
 PROJECT_BUILDER_CONTAINER_NAME=install_dependencies_$(uuidgen)
 export COMPOSE_FILE=$3
 export PHP_IMAGE=${4-ghcr.io/ibexa/docker/php:8.1-node18}
