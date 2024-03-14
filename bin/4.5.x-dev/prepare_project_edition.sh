@@ -121,6 +121,9 @@ if [ -f dependencies.json ]; then
     done
 fi
 
+echo "> Display composer.json for debugging"
+cat composer.json
+
 # Install correct product variant
 docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
 
