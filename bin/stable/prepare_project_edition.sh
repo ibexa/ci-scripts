@@ -35,11 +35,11 @@ if [ -f ${DEPENDENCY_PACKAGE_DIR}/auth.json ]; then
 fi
 
 if [[ $PHP_IMAGE == *"7."* ]] || [[ $PHP_IMAGE == *"8.0"* ]] || [[ $PHP_IMAGE == *"8.3"* ]]; then
-    echo "> Running composer update"
-    docker exec install_dependencies composer update --no-scripts --ansi
-else
     echo "> Running composer install"
     docker exec install_dependencies composer install --no-scripts --ansi
+else
+    echo "> Running composer update"
+    docker exec install_dependencies composer update --no-scripts --ansi
 fi
 
 if [[ $PROJECT_VERSION == *"v3.3"* ]]; then
