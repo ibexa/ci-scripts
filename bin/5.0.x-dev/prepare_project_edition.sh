@@ -137,7 +137,7 @@ docker exec install_dependencies composer update --no-scripts
 sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/bundles.php
 
 if [[ $PHP_IMAGE == *"8.2"* ]] || [[ $PHP_IMAGE == *"8.3"* ]]; then
-    echo "> Set PHP 8.2 Ibexa error handler to avoid deprecations"
+    echo "> Set PHP 8.2+ Ibexa error handler to avoid deprecations"
     docker exec install_dependencies composer config extra.runtime.error_handler "\\Ibexa\\Contracts\\Core\\MVC\\Symfony\\ErrorHandler\\Php82HideDeprecationsErrorHandler"
     docker exec install_dependencies composer dump-autoload
 fi
