@@ -34,7 +34,7 @@ if [ -f ${DEPENDENCY_PACKAGE_DIR}/auth.json ]; then
     cp ${DEPENDENCY_PACKAGE_DIR}/auth.json .
 fi
 
-if [[ $PHP_IMAGE == *"7."* ]] || [[ $PHP_IMAGE == *"8.0"* ]] || [[ $PHP_IMAGE == *"8.3"* ]]; then
+if [[ $PHP_IMAGE == *"8.3"* ]]; then
     echo "> Running composer install"
     docker exec install_dependencies composer install --no-scripts --ansi
 else
