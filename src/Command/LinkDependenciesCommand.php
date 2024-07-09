@@ -16,6 +16,7 @@ use Ibexa\ContiniousIntegrationScripts\ValueObject\Dependencies;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Path;
@@ -60,8 +61,6 @@ class LinkDependenciesCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $this->token = $input->getArgument('token');
-
         $dependencies = $this->analyzeDependencies($this->pullRequestUrls);
         $this->createDependenciesFile($dependencies, $io);
 
@@ -73,7 +72,8 @@ class LinkDependenciesCommand extends Command
         $this
             ->setName('dependencies:link')
             ->setDescription(sprintf('Outputs a %s file that contains data about related Pull Requests', self::DEPENDENCIES_FILE))
-            ->addArgument('token', InputArgument::OPTIONAL, 'GitHub OAuth token')
+            ->addOption('token', 't', InputOption::VALUE_OPTIONAL, 'GitHub OAuth token')
+            ->addArgument('pr-list', InputArgument::OPTIONAL | InputArgument::IS_ARRAY, 'List of Pull Request links')
         ;
     }
 
@@ -109,12 +109,24 @@ class LinkDependenciesCommand extends Command
         return $pullRequestData;
     }
 
+    protected function initialize(InputInterface $input, OutputInterface $output): void
+    {
+        $prList = $input->getArgument('pr-list');
+
+        if (!empty($prList)) {
+            $this->pullRequestUrls = array_unique($prList);
+        }
+
+        $this->token = $input->getOption('token') ?? $this->tokenProvider->getGitHubToken();
+    }
+
     protected function interact(InputInterface $input, OutputInterface $output): void
     {
         $io = new SymfonyStyle($input, $output);
 
-        if (!$input->getArgument('token')) {
-            $input->setArgument('token', $this->tokenProvider->getGitHubToken());
+        // if PR list was taken from argument list, do nothing
+        if (!empty($this->pullRequestUrls)) {
+            return;
         }
 
         $relatedPRsNumber = $io->ask('Please enter the number of related Pull Requests', '1', static function ($number) {
