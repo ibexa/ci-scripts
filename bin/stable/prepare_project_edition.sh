@@ -5,7 +5,7 @@ PROJECT_EDITION=$1
 PROJECT_VERSION=$2
 PROJECT_BUILD_DIR=${HOME}/build/project
 export COMPOSE_FILE=$3
-export PHP_IMAGE=${4-ezsystems/php:7.4-v2-node16}
+export PHP_IMAGE=${4-ghcr.io/ibexa/docker/php:8.3-node18}
 export COMPOSER_MAX_PARALLEL_HTTP=6 # Reduce Composer parallelism to work around Github Actions network errors
 
 DEPENDENCY_PACKAGE_DIR=$(pwd)
@@ -34,12 +34,12 @@ if [ -f ${DEPENDENCY_PACKAGE_DIR}/auth.json ]; then
     cp ${DEPENDENCY_PACKAGE_DIR}/auth.json .
 fi
 
-if [[ $PHP_IMAGE == *"7."* ]] || [[ $PHP_IMAGE == *"8.0"* ]] || [[ $PHP_IMAGE == *"8.3"* ]]; then
-    echo "> Running composer update"
-    docker exec install_dependencies composer update --no-scripts --ansi
-else
+if [[ $PHP_IMAGE == *"8.3"* ]]; then
     echo "> Running composer install"
     docker exec install_dependencies composer install --no-scripts --ansi
+else
+    echo "> Running composer update"
+    docker exec install_dependencies composer update --no-scripts --ansi
 fi
 
 if [[ $PROJECT_VERSION == *"v3.3"* ]]; then
@@ -55,12 +55,6 @@ sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/
 
 # Create a default Behat configuration file
 cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
-
-if [[ $PHP_IMAGE == *"8.2"* ]] || [[ $PHP_IMAGE == *"8.3"* ]]; then
-    echo "> Set PHP 8.2 Ibexa error handler to avoid deprecations"
-    docker exec install_dependencies composer config extra.runtime.error_handler "\\Ibexa\\Contracts\\Core\\MVC\\Symfony\\ErrorHandler\\Php82HideDeprecationsErrorHandler"
-    docker exec install_dependencies composer dump-autoload
-fi
 
 # Depenencies are installed and container can be removed
 docker container stop install_dependencies

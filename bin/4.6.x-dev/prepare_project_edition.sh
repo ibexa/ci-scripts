@@ -5,7 +5,7 @@ PROJECT_EDITION=$1
 PROJECT_VERSION=$2
 PROJECT_BUILD_DIR=${HOME}/build/project
 export COMPOSE_FILE=$3
-export PHP_IMAGE=${4-ghcr.io/ibexa/docker/php:8.1-node18}
+export PHP_IMAGE=${4-ghcr.io/ibexa/docker/php:8.3-node18}
 export COMPOSER_MAX_PARALLEL_HTTP=6 # Reduce Composer parallelism to work around Github Actions network errors
 
 if [[ -n "${DOCKER_PASSWORD}" ]]; then
@@ -137,7 +137,7 @@ docker exec install_dependencies composer update --no-scripts
 sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/bundles.php
 
 if [[ $PHP_IMAGE == *"8.2"* ]] || [[ $PHP_IMAGE == *"8.3"* ]]; then
-    echo "> Set PHP 8.2 Ibexa error handler to avoid deprecations"
+    echo "> Set PHP 8.2+ Ibexa error handler to avoid deprecations"
     docker exec install_dependencies composer config extra.runtime.error_handler "\\Ibexa\\Contracts\\Core\\MVC\\Symfony\\ErrorHandler\\Php82HideDeprecationsErrorHandler"
     docker exec install_dependencies composer dump-autoload
 fi
