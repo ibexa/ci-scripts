@@ -114,6 +114,10 @@ docker exec install_dependencies composer recipes:install ${DEPENDENCY_PACKAGE_N
 # Install Behat and Docker packages
 docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --ansi --no-update
 
+# Install opt-in packages
+# ibexa/connector-qualifio is already being installed with the project
+docker exec install_dependencies composer require ibexa/connector-ai:$PROJECT_VERSION ibexa/connector-openai:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
+
 # Add other dependencies if required
 if [ -f dependencies.json ]; then
     COUNT=$(cat dependencies.json | jq '.packages | length' )
