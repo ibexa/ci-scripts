@@ -115,8 +115,11 @@ docker exec install_dependencies composer recipes:install ${DEPENDENCY_PACKAGE_N
 docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --ansi --no-update
 
 # Install opt-in packages
-# ibexa/connector-qualifio is already being installed with the project
-docker exec install_dependencies composer require ibexa/connector-ai:$PROJECT_VERSION ibexa/connector-openai:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
+if [[ "$PROJECT_EDITION" != "oss" ]]; then
+  # openai-php/client requires PHP 8.1+, v5.0 test matrix has PHP 8.3 only
+  # ibexa/connector-qualifio is already being installed with the project
+  docker exec install_dependencies composer require ibexa/connector-ai:$PROJECT_VERSION ibexa/connector-openai:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
+fi
 
 # Add other dependencies if required
 if [ -f dependencies.json ]; then
