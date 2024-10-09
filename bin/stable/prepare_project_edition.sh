@@ -48,9 +48,12 @@ if [[ $PROJECT_VERSION == *"v3.3"* ]]; then
 else
     echo "> Installing dependencies for v4"
     docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
-    echo "> Installing opt-in packages"
-    # ibexa/connector-qualifio is already being installed with the project
-    docker exec install_dependencies composer require ibexa/connector-ai:$PROJECT_VERSION ibexa/connector-openai:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
+    if [[ "$PROJECT_EDITION" != "oss" ]] && [[ $PHP_IMAGE == *"8.3"* ]]; then
+      # openai-php/client requires PHP 8.1+, v4.6 test matrix has PHP 7.4, 8.0, 8.3
+      echo "> Installing opt-in packages"
+      # ibexa/connector-qualifio is already being installed with the project
+      docker exec install_dependencies composer require ibexa/connector-ai:$PROJECT_VERSION ibexa/connector-openai:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
+    fi
 fi
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
