@@ -27,7 +27,7 @@ echo "- PROJECT_BUILD_DIR=${PROJECT_BUILD_DIR}"
 echo "- DEPENDENCY_PACKAGE_NAME=${DEPENDENCY_PACKAGE_NAME}"
 
 # Go to main project dir
-mkdir -p $PROJECT_BUILD_DIR && cd $PROJECT_BUILD_DIR && ls -A1 | xargs rm -rf
+mkdir -p $PROJECT_BUILD_DIR && cd $PROJECT_BUILD_DIR && ls -A1 | xargs sudo rm -rf
 
 # Create container to install dependencies
 RANDOM_SUFFIX=$(echo $RANDOM | base64 | head -c 6; echo)
