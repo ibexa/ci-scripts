@@ -30,7 +30,8 @@ echo "- DEPENDENCY_PACKAGE_NAME=${DEPENDENCY_PACKAGE_NAME}"
 mkdir -p $PROJECT_BUILD_DIR && cd $PROJECT_BUILD_DIR
 
 # Create container to install dependencies
-docker run --name install_dependencies -d \
+RANDOM_SUFFIX=$(echo $RANDOM | base64 | head -c 6; echo)
+docker run --name install_dependencies_${RANDOM_SUFFIX} -d \
 --volume=${PROJECT_BUILD_DIR}:/var/www:cached \
 --volume=${HOME}/.composer:/root/.composer \
 -e APP_ENV -e APP_DEBUG  \
@@ -54,7 +55,7 @@ if [ -f ${DEPENDENCY_PACKAGE_DIR}/dependencies.json ]; then
     fi
 fi
 
-docker exec install_dependencies composer update --ansi
+docker exec install_dependencies_${RANDOM_SUFFIX} composer update --ansi
 
 # Move dependency to directory available for docker volume
 echo "> Move ${DEPENDENCY_PACKAGE_DIR} to ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}"
@@ -102,23 +103,23 @@ composer config repositories.localDependency "$JSON_STRING"
 composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_VERSION" --no-update
 
 # Install correct product variant
-docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
+docker exec install_dependencies_${RANDOM_SUFFIX} composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
 
 # Init a repository to avoid Composer asking questions
-docker exec install_dependencies git config --global --add safe.directory /var/www && git init && git add .
+docker exec install_dependencies_${RANDOM_SUFFIX} git config --global --add safe.directory /var/www && git init && git add .
 
 # Execute recipes
-docker exec install_dependencies composer recipes:install ibexa/${PROJECT_EDITION} --force --reset --ansi
-docker exec install_dependencies composer recipes:install ${DEPENDENCY_PACKAGE_NAME} --force --reset --ansi
+docker exec install_dependencies_${RANDOM_SUFFIX} composer recipes:install ibexa/${PROJECT_EDITION} --force --reset --ansi
+docker exec install_dependencies_${RANDOM_SUFFIX} composer recipes:install ${DEPENDENCY_PACKAGE_NAME} --force --reset --ansi
 
 # Install Behat and Docker packages
-docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --ansi --no-update
+docker exec install_dependencies_${RANDOM_SUFFIX} composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --ansi --no-update
 
 # Install opt-in packages
 if [[ "$PROJECT_EDITION" != "oss" ]] && [[ $PHP_IMAGE == *"8.3"* ]]; then
   # openai-php/client requires PHP 8.1+, v4.6 test matrix has PHP 7.4, 8.0, 8.3
   # ibexa/connector-qualifio is already being installed with the project
-  docker exec install_dependencies composer require ibexa/connector-ai:$PROJECT_VERSION ibexa/connector-openai:$PROJECT_VERSION --no-scripts --ansi --no-update
+  docker exec install_dependencies_${RANDOM_SUFFIX} composer require ibexa/connector-ai:$PROJECT_VERSION ibexa/connector-openai:$PROJECT_VERSION --no-scripts --ansi --no-update
 fi
 
 # Add other dependencies if required
@@ -131,22 +132,22 @@ if [ -f dependencies.json ]; then
         SHOULD_BE_ADDED_AS_VCS=$(cat dependencies.json | jq -r .packages[$i].shouldBeAddedAsVCS)
         if [[ $SHOULD_BE_ADDED_AS_VCS == "true" ]] ; then 
             echo ">> Private or fork repository detected, adding VCS to Composer repositories"
-            docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
+            docker exec install_dependencies_${RANDOM_SUFFIX} composer config repositories.$(uuidgen) vcs "$REPO_URL"
         fi
         jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
         mv composer.json.new composer.json
     done
 fi
 
-docker exec install_dependencies composer update --no-scripts
+docker exec install_dependencies_${RANDOM_SUFFIX} composer update --no-scripts
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
 sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/bundles.php
 
 if [[ $PHP_IMAGE == *"8.2"* ]] || [[ $PHP_IMAGE == *"8.3"* ]]; then
     echo "> Set PHP 8.2+ Ibexa error handler to avoid deprecations"
-    docker exec install_dependencies composer config extra.runtime.error_handler "\\Ibexa\\Contracts\\Core\\MVC\\Symfony\\ErrorHandler\\Php82HideDeprecationsErrorHandler"
-    docker exec install_dependencies composer dump-autoload
+    docker exec install_dependencies_${RANDOM_SUFFIX} composer config extra.runtime.error_handler "\\Ibexa\\Contracts\\Core\\MVC\\Symfony\\ErrorHandler\\Php82HideDeprecationsErrorHandler"
+    docker exec install_dependencies_${RANDOM_SUFFIX} composer dump-autoload
 fi
 
 echo "> Display composer.json for debugging"
@@ -156,8 +157,8 @@ cat composer.json
 cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
 
 # Depenencies are installed and container can be removed
-docker container stop install_dependencies
-docker container rm install_dependencies
+docker container stop install_dependencies_${RANDOM_SUFFIX}
+docker container rm install_dependencies_${RANDOM_SUFFIX}
 
 # Set up Percy visual testing base branch
 IFS='.' read -ra VERSION_NUMBERS <<< "$PROJECT_VERSION"
