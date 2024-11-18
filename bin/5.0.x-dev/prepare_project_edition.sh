@@ -116,7 +116,7 @@ docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION i
 
 # Install opt-in packages
 if [[ "$PROJECT_EDITION" != "oss" ]]; then
-  # openai-php/client requires PHP 8.1+, v5.0 test matrix has PHP 8.3 only
+  # openai-php/client was replaced with orhanerday/open-ai (PHP 7.4+), v5.0 test matrix has PHP 8.3 only (unaffected)
   # ibexa/connector-qualifio is already being installed with the project
   docker exec install_dependencies composer require ibexa/connector-ai:$PROJECT_VERSION ibexa/connector-openai:$PROJECT_VERSION --no-scripts --ansi --no-update
 fi
