@@ -59,7 +59,7 @@ class RunRegressionCommand extends Command
         if (!$input->getArgument('productVersion')) {
             $productVersion = $io->ask(
                 'Please enter the Ibexa DXP version',
-                '4.5',
+                '4.6',
                 static function (string $answer): string {
                     if (preg_match('/^(\d+)\.(\d+)$/', $answer) === 0) {
                         throw new \RuntimeException(
@@ -78,7 +78,7 @@ class RunRegressionCommand extends Command
         }
 
         if (!$input->getArgument('productEditions')) {
-            $productEditions = $io->ask('Please enter the Ibexa DXP edition(s)', 'oss', static function (string $answer): array {
+            $productEditions = $io->ask('Please enter the Ibexa DXP edition(s)', 'commerce', static function (string $answer): array {
                 $editions = explode(',', $answer);
                 self::validateEditions($editions);
 
