@@ -170,8 +170,11 @@ class LinkDependenciesCommand extends Command
 
         foreach ($pullRequestUrls as $pullRequestUrl) {
             $matches = [];
-            preg_match('/.*github.com\/(.*)\/(.*)\/pull\/(\d+).*/', $pullRequestUrl, $matches);
-            [, $owner, $repository, $prNumber] = $matches;
+            if (preg_match('/.*github.com\/(.*)\/(.*)\/pull\/(\d+).*/', $pullRequestUrl, $matches) === 1) {
+                [, $owner, $repository, $prNumber] = $matches;
+            } else {
+                throw new \InvalidArgumentException('Invalid pull request github URL format.');
+            }
             $prNumber = (int)$prNumber;
 
             if ($owner === 'ibexa' && $repository === 'recipes-dev') {
