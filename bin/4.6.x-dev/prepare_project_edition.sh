@@ -187,9 +187,9 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/consol
 
 echo '> Display database version for debugging'
 if [[ "$COMPOSE_FILE" == *"db-postgresql.yml"* ]]; then
-    psql -V
+    docker compose --env-file=.env exec -T --user www-data app sh -c "psql -V"
 else
-    mysql -V
+    docker compose --env-file=.env exec -T --user www-data app sh -c "mysql -V"
 fi
 
 echo '> Generate GraphQL schema'
