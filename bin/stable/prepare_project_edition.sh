@@ -45,7 +45,7 @@ fi
 if [[ $PROJECT_VERSION == *"v3.3"* ]]; then
     echo "> Installing dependencies for 3.3"
     docker exec install_dependencies composer require ezsystems/behatbundle:^8.3 ibexa/docker:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
-else
+elif [[ $PROJECT_VERSION == *"v4.6"* ]]; then
     echo "> Installing dependencies for v4"
     docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
     if [[ "$PROJECT_EDITION" != "oss" ]]; then
@@ -56,6 +56,9 @@ else
     if [[ "$PROJECT_EDITION" == "commerce" ]]; then
       docker exec install_dependencies composer require ibexa/discounts:$PROJECT_VERSION ibexa/discounts-codes:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
     fi
+else
+    echo "> Installing dependencies for v5"
+    docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
 fi
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
