@@ -2,7 +2,7 @@
 set -e
 
 PROJECT_EDITION=$1
-PROJECT_VERSION=$2
+PROJECT_VERSION=5.0.x-dev
 PROJECT_BUILD_DIR=${HOME}/build/project
 export COMPOSE_FILE=$3
 export PHP_IMAGE=${4-ghcr.io/ibexa/docker/php:8.3-node18}
@@ -179,5 +179,87 @@ fi
 
 echo '> Generate GraphQL schema'
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
+
+########################################################################################################################
+
+# Delete old GraphQL schema
+docker compose rm -r config/graphql
+
+# Remove Stimulus bootstrap
+docker compose rm assets/bootstrap.js
+docker compose sed -i '/bootstrap/d' assets/app.js
+docker compose sed -i '/start the Stimulus application/d' assets/app.js
+
+# Move from annotation to attribute
+#docker compose sed -i 's/type: annotation/type: attribute/g' config/routes/annotations.yaml
+docker compose rm config/routes/annotations.yaml
+docker compose rm config/routes.yaml
+
+# TMP: Accept dev version (5.0.x-dev)
+docker compose composer config minimum-stability dev;
+
+# Update required PHP version
+docker compose composer require --no-update 'php:>=8.3';
+# Update required Symfony version
+docker compose composer config extra.symfony.require '7.2.*'
+
+# Upgrade Ibexa and Symfony packages (main app)
+docker compose composer require --no-update \
+  ibexa/commerce:5.0.x-dev \
+  symfony/console:^7.2 \
+  symfony/dotenv:^7.2 \
+  symfony/framework-bundle:^7.2 \
+  symfony/runtime:^7.2 \
+  symfony/yaml:^7.2 \
+;
+
+# TMP: admin-ui-assets and headless-assets need to be on a tag
+docker compose composer require --no-update \
+  ibexa/admin-ui-assets:v5.0.0-alpha5 \
+  ibexa/headless-assets:v5.0.0-alpha4 \
+;
+
+# Upgrade Ibexa and Symfony packages (dev tools)
+docker compose composer require --dev --no-update \
+  ibexa/rector:5.0.x-dev \
+  symfony/debug-bundle:^7.2 \
+  symfony/stopwatch:^7.2 \
+  symfony/web-profiler-bundle:^7.2 \
+;
+
+# Remove Php82HideDeprecationsErrorHandler
+docker compose composer config --unset extra.runtime.error_handler
+
+# Update packages / Install new dependencies
+docker compose composer update --with-all-dependencies --no-scripts --verbose
+
+# TMP: Move to development recipes
+docker compose composer config extra.symfony.endpoint "https://api.github.com/repos/ibexa/recipes-dev/contents/index.json?ref=flex/main"
+# Reset recipes
+docker compose rm symfony.lock
+# Run recipes
+docker compose composer recipes:install ibexa/commerce --force --yes -v
+
+# Swap tsconfig.json usage and creation
+docker compose perl -0pe 's/"ibexa:encore:compile": "symfony-cmd",\n            "yarn ibexa-generate-tsconfig": "script"/"yarn ibexa-generate-tsconfig": "script",\n            "ibexa:encore:compile": "symfony-cmd"/gms' -i composer.json
+
+# Manually clear cache to ensure scripts won't use a piece of it
+docker compose rm -rf var/cache
+
+# A.k.a "auto-scripts" (mainly JS and assets stuffs)
+docker compose composer run-script post-update-cmd
+
+# Database update
+docker compose mysql < vendor/ibexa/installer/upgrade/db/mysql/ibexa-4.6.latest-to-5.0.0.sql
+# LTS Update related schemas to inject only if the add-on was never installed
+# keep an eye!
+#ddev php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/collaboration/src/bundle/Resources/config/schema.yaml | ddev mysql
+#ddev php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/share/src/bundle/Resources/config/schema.yaml | ddev mysql
+#ddev php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/connector-ai/src/bundle/Resources/config/schema.yaml | ddev mysql
+
+# Generate new GraphQL schema if used (while admin-ui doesn't use it anymore)
+docker compose composer require ibexa/graphql --no-interaction
+docker compose php bin/console ibexa:graphql:generate-schema
+
 
 echo '> Done, ready to run tests'
