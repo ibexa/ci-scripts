@@ -2,7 +2,7 @@
 set -e
 
 PROJECT_EDITION=$1
-PROJECT_VERSION=5.0.x-dev
+PROJECT_VERSION=4.6.x-dev
 PROJECT_BUILD_DIR=${HOME}/build/project
 export COMPOSE_FILE=$3
 export PHP_IMAGE=${4-ghcr.io/ibexa/docker/php:8.3-node18}
@@ -207,6 +207,8 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "composer confi
 # Upgrade Ibexa and Symfony packages (main app)
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer require --no-update \
   ibexa/commerce:5.0.x-dev \
+  ibexa/behat:5.0.x-dev \
+  ibexa/docker:5.0.x-dev \
   symfony/console:^7.2 \
   symfony/dotenv:^7.2 \
   symfony/framework-bundle:^7.2 \
@@ -217,8 +219,8 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "composer requi
 
 # TMP: admin-ui-assets and headless-assets need to be on a tag
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer require --no-update \
-  ibexa/admin-ui-assets:v5.0.0-alpha5 \
-  ibexa/headless-assets:v5.0.0-alpha4 \
+  ibexa/admin-ui-assets:v5.0.0-beta2 \
+  ibexa/headless-assets:v5.0.0-beta1 \
 ;"
 
 # Upgrade Ibexa and Symfony packages (dev tools)
