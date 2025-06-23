@@ -245,8 +245,9 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "rm symfony.loc
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer recipes:install ibexa/commerce --force --yes -v"
 
 # Swap tsconfig.json usage and creation
-docker compose --env-file=.env exec -T --user www-data app sh -c "perl -0pe 's/"ibexa:encore:compile": "symfony-cmd",\n            "yarn ibexa-generate-tsconfig": "script"/"yarn ibexa-generate-tsconfig": "script",\n            "ibexa:encore:compile": "symfony-cmd"/gms' -i composer.json"
-
+docker compose --env-file=.env exec -T --user www-data app sh -c "perl -0pe 's/"ibexa:encore:compile": "symfony-cmd",\n\s+"yarn ibexa-generate-tsconfig": "script"/"yarn ibexa-generate-tsconfig": "script",\n            "ibexa:encore:compile": "symfony-cmd"/gms' -i composer.json"
+                                                                  
+ 
 # Manually clear cache to ensure scripts won't use a piece of it
 docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cache"
 
