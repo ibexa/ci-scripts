@@ -91,15 +91,15 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
     mv composer.json.new composer.json
 fi
 
-echo "> Make composer use tested dependency"
-JSON_STRING=$( jq -n \
-                  --arg packageVersion "$DEPENDENCY_PACKAGE_VERSION" \
-                  --arg packageName "$DEPENDENCY_PACKAGE_NAME" \
-                  --arg packageDir "./$DEPENDENCY_PACKAGE_NAME" \
-                  '{"type": "path", "url": $packageDir, "options": { "symlink": false , "versions": { ($packageName): $packageVersion}}}' )
+# echo "> Make composer use tested dependency"
+# JSON_STRING=$( jq -n \
+#                   --arg packageVersion "$DEPENDENCY_PACKAGE_VERSION" \
+#                   --arg packageName "$DEPENDENCY_PACKAGE_NAME" \
+#                   --arg packageDir "./$DEPENDENCY_PACKAGE_NAME" \
+#                   '{"type": "path", "url": $packageDir, "options": { "symlink": false , "versions": { ($packageName): $packageVersion}}}' )
 
-composer config repositories.localDependency "$JSON_STRING"
-composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_VERSION" --no-update
+# composer config repositories.localDependency "$JSON_STRING"
+# composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_VERSION" --no-update
 
 # Install correct product variant
 docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
