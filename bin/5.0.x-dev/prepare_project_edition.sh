@@ -238,7 +238,7 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "composer confi
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer update --with-all-dependencies --no-scripts --verbose"
 
 # TMP: Move to development recipes
-docker compose --env-file=.env exec -T --user www-data app sh -c "composer config extra.symfony.endpoint "https://api.github.com/repos/ibexa/recipes-dev/contents/index.json?ref=flex/main""
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer config extra.symfony.endpoint \"https://api.github.com/repos/ibexa/recipes-dev/contents/index.json?ref=flex/main\""
 # Reset recipes
 docker compose --env-file=.env exec -T --user www-data app sh -c "rm symfony.lock"
 # Run recipes
