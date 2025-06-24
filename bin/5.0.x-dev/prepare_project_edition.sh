@@ -255,7 +255,7 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cac
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer run-script post-update-cmd"
 
 # Database update
-docker exec ibexa-db-1 sh -c "mysql -u ${DATABASE_USER} -p ${DATABASE_PASSWORD} "
+docker exec ibexa-db-1 sh -c "mysql -u ${DATABASE_USER} -p${DATABASE_PASSWORD}"
 docker compose --env-file=.env exec -T --user www-data app sh -c "mysql < vendor/ibexa/installer/upgrade/db/mysql/ibexa-4.6.latest-to-5.0.0.sql"
 # LTS Update related schemas to inject only if the add-on was never installed
 # keep an eye!
