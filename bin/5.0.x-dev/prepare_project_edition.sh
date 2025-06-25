@@ -258,7 +258,7 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "composer run-s
 # docker exec ibexa-db-1 sh -c "mysql -u ezp -pSetYourOwnPassword"
 # docker compose --env-file=.env exec -T --user www-data app sh -c "mysql < vendor/ibexa/installer/upgrade/db/mysql/ibexa-4.6.latest-to-5.0.0.sql"
 
-docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:database:import vendor/ibexa/installer/upgrade/db/mysql/ibexa-4.6.latest-to-5.0.0.sql"
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(cat vendor/ibexa/installer/upgrade/db/mysql/ibexa-4.6.latest-to-5.0.0.sql | grep -v '\-- ')\""
 
 # LTS Update related schemas to inject only if the add-on was never installed
 # keep an eye!
