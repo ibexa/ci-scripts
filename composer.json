@@ -38,7 +38,7 @@
     "require-dev": {
         "ibexa/code-style": "^1.0",
         "phpstan/phpstan": "^1.8",
-        "doctrine/doctrine-fixtures-bundle": "^4.0",
+        "doctrine/doctrine-fixtures-bundle": "^3.0",
         "phpunit/phpunit": "^9.5",
         "mikey179/vfsstream": "^1.6"
     },
