@@ -140,7 +140,7 @@ echo "> Display composer.json for debugging"
 cat composer.json
 
 # Create a default Behat configuration file
-cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
+# cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
 
 # Depenencies are installed and container can be removed
 docker container stop install_dependencies
@@ -271,7 +271,7 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "composer requi
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
 
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer recipes:install ibexa/behat --force --reset"
-
+cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
 
 
 echo '> Done, ready to run tests'
