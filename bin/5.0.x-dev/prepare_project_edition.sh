@@ -271,6 +271,7 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "composer requi
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
 
 docker compose --env-file=.env exec -T --user www-data app sh -c "rm behat_ibexa_commerce.yaml"
+docker compose --env-file=.env exec -T --user www-data app sh -c "git add . && git commit -m 'current state'"
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer recipes:install ibexa/behat --force --reset"
 
 docker compose --env-file=.env exec -T --user www-data app sh -c "cp behat_ibexa_commerce.yaml behat.yaml"
