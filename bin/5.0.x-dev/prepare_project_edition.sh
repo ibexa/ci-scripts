@@ -272,7 +272,7 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/consol
 
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer recipes:install ibexa/behat --force --reset"
 
-docker compose --env-file=.env exec -T --user www-data app sh -c "cp "behat_ibexa_commerce.yaml" behat.yaml"
+docker compose --env-file=.env exec -T --user www-data app sh -c "cp behat_ibexa_commerce.yaml behat.yaml"
 
 
 echo '> Done, ready to run tests'
