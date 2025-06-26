@@ -270,5 +270,8 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/consol
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer require ibexa/graphql --no-interaction"
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
 
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer recipes:install ibexa/behat --force --reset"
+
+
 
 echo '> Done, ready to run tests'
