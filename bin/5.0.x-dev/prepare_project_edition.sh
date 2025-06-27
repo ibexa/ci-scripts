@@ -276,6 +276,9 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/consol
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer require ibexa/graphql --no-interaction"
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
 
+# reindex
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:reindex"
+
 docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf behat_ibexa_commerce.yaml"
 docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf behat_ibexa_oss.yaml"
 # docker compose --env-file=.env exec -T --user www-data app sh -c "git add . && git commit -m 'current state'"
