@@ -140,6 +140,7 @@ echo "> Display composer.json for debugging"
 cat composer.json
 
 # Create a default Behat configuration file
+touch behat.yaml
 # cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
 
 # Depenencies are installed and container can be removed
