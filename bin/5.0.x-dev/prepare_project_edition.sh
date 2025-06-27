@@ -264,6 +264,9 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/consol
 # LTS Update related schemas to inject only if the add-on was never installed
 # keep an eye!
 #ddev php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/collaboration/src/bundle/Resources/config/schema.yaml | ddev mysql
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(cat vendor/ibexa/collaboration/src/bundle/Resources/config/schema.yaml | grep -v '\-- ')\""
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(cat vendor/ibexa/share/src/bundle/Resources/config/schema.yaml | grep -v '\-- ')\""
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(cat vendor/ibexa/connector-ai/src/bundle/Resources/config/schema.yaml | grep -v '\-- ')\""
 #ddev php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/share/src/bundle/Resources/config/schema.yaml | ddev mysql
 #ddev php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/connector-ai/src/bundle/Resources/config/schema.yaml | ddev mysql
 
