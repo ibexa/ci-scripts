@@ -204,6 +204,9 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "composer requi
 # Update required Symfony version
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer config extra.symfony.require '7.2.*'"
 
+echo "> Remove cache dir"
+docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cache/*"
+docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cache/behat/*"
 
 # Upgrade Ibexa and Symfony packages (main app)
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer require --no-update \
