@@ -279,10 +279,12 @@ if [[ "$COMPOSE_FILE" == *"db-postgresql.yml"* ]]; then
     docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/collaboration/src/bundle/Resources/config/schema.yaml)\""
     docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/share/src/bundle/Resources/config/schema.yaml)\""
     docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/connector-ai/src/bundle/Resources/config/schema.yaml)\""
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/product-catalog-date-time-attribute/src/bundle/Resources/config/schema.yaml)\""
 else
     docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/collaboration/src/bundle/Resources/config/schema.yaml)\""
     docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/share/src/bundle/Resources/config/schema.yaml)\""
     docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/connector-ai/src/bundle/Resources/config/schema.yaml)\""
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/product-catalog-date-time-attribute/src/bundle/Resources/config/schema.yaml)\""
 fi
 
 # docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/share/src/bundle/Resources/config/schema.yaml"
