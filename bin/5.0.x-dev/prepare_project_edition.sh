@@ -217,7 +217,6 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "composer requi
   symfony/yaml:^7.2 \
 ;"
 
-
 # TMP: admin-ui-assets and headless-assets need to be on a tag
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer require --no-update \
   ibexa/admin-ui-assets:v5.0.0-beta2 \
@@ -237,6 +236,10 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "composer confi
 
 # Update packages / Install new dependencies
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer update --with-all-dependencies --no-scripts --verbose"
+
+# TMP DEPENDENCIES
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer require ibexa/core:dev-fix-legacy-aliases as 5.0.x-dev"
+
 
 # TMP: Move to development recipes
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer config extra.symfony.endpoint \"https://api.github.com/repos/ibexa/recipes-dev/contents/index.json?ref=flex/main\""
