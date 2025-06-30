@@ -238,7 +238,7 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "composer confi
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer update --with-all-dependencies --no-scripts --verbose"
 
 # TMP DEPENDENCIES
-docker compose --env-file=.env exec -T --user www-data app sh -c "composer require ibexa/core:dev-fix-legacy-aliases as 5.0.x-dev"
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer require 'ibexa/core:dev-fix-legacy-aliases as 5.0.x-dev'"
 
 
 # TMP: Move to development recipes
@@ -262,14 +262,26 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "composer run-s
 # docker exec ibexa-db-1 sh -c "mysql -u ezp -pSetYourOwnPassword"
 # docker compose --env-file=.env exec -T --user www-data app sh -c "mysql < vendor/ibexa/installer/upgrade/db/mysql/ibexa-4.6.latest-to-5.0.0.sql"
 
-docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(cat vendor/ibexa/installer/upgrade/db/mysql/ibexa-4.6.latest-to-5.0.0.sql | grep -v '\-- ')\""
+if [[ "$COMPOSE_FILE" == *"db-postgresql.yml"* ]]; then
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(cat vendor/ibexa/installer/upgrade/db/postgresql/ibexa-4.6.latest-to-5.0.0.sql | grep -v '\-- ')\""
+else
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(cat vendor/ibexa/installer/upgrade/db/mysql/ibexa-4.6.latest-to-5.0.0.sql | grep -v '\-- ')\""
+fi
 
 # LTS Update related schemas to inject only if the add-on was never installed
 # keep an eye!
 #ddev php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/collaboration/src/bundle/Resources/config/schema.yaml | ddev mysql
-docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/collaboration/src/bundle/Resources/config/schema.yaml)\""
-docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/share/src/bundle/Resources/config/schema.yaml)\""
-docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/connector-ai/src/bundle/Resources/config/schema.yaml)\""
+
+if [[ "$COMPOSE_FILE" == *"db-postgresql.yml"* ]]; then
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/collaboration/src/bundle/Resources/config/schema.yaml)\""
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/share/src/bundle/Resources/config/schema.yaml)\""
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/connector-ai/src/bundle/Resources/config/schema.yaml)\""
+else
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/collaboration/src/bundle/Resources/config/schema.yaml)\""
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/share/src/bundle/Resources/config/schema.yaml)\""
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/connector-ai/src/bundle/Resources/config/schema.yaml)\""
+fi
+
 # docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/share/src/bundle/Resources/config/schema.yaml"
 # docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/connector-ai/src/bundle/Resources/config/schema.yaml"
 #ddev php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/share/src/bundle/Resources/config/schema.yaml | ddev mysql
