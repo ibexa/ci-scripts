@@ -241,7 +241,7 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "composer confi
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer update --with-all-dependencies --no-scripts --verbose"
 
 # TMP DEPENDENCIES
-docker compose --env-file=.env exec -T --user www-data app sh -c "composer require 'ibexa/core:dev-fix-legacy-aliases as 5.0.x-dev'"
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer require 'ibexa/core:dev-fix-legacy-aliases as 5.0.x-dev' --no-scripts"
 
 
 # TMP: Move to development recipes
