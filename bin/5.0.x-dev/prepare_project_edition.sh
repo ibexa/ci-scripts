@@ -241,7 +241,7 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "composer confi
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer update --with-all-dependencies --no-scripts --verbose"
 
 # TMP DEPENDENCIES
-docker compose --env-file=.env exec -T --user www-data app sh -c "composer require 'ibexa/core:dev-fix-legacy-aliases as 5.0.x-dev' --no-scripts"
+# docker compose --env-file=.env exec -T --user www-data app sh -c "composer require 'ibexa/core:dev-fix-legacy-aliases as 5.0.x-dev' --no-scripts"
 
 # TMP: Move to development recipes
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer config extra.symfony.endpoint \"https://api.github.com/repos/ibexa/recipes-dev/contents/index.json?ref=flex/main\""
@@ -288,7 +288,7 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/consol
 #ddev php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/connector-ai/src/bundle/Resources/config/schema.yaml | ddev mysql
 
 # Generate new GraphQL schema if used (while admin-ui doesn't use it anymore)
-docker compose exec -T --user www-data app sh -c 'php bin/console cache:pool:clear ${CACHE_POOL:-cache.tagaware.filesystem}'
+# docker compose exec -T --user www-data app sh -c 'php bin/console cache:pool:clear ${CACHE_POOL:-cache.tagaware.filesystem}'
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer require ibexa/graphql --no-interaction"
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
 
