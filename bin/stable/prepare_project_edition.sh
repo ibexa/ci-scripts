@@ -53,6 +53,7 @@ elif [[ $PROJECT_VERSION == *"v4.6"* ]]; then
       # ibexa/connector-qualifio is already being installed with the project
       docker exec install_dependencies composer require ibexa/connector-ai:$PROJECT_VERSION ibexa/connector-openai:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
       docker exec install_dependencies composer require ibexa/product-catalog-date-time-attribute:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
+      docker exec install_dependencies composer require ibexa/product-catalog-symbol-attribute:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
     fi
     if [[ "$PROJECT_EDITION" == "commerce" ]]; then
       docker exec install_dependencies composer require ibexa/discounts:$PROJECT_VERSION ibexa/discounts-codes:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi

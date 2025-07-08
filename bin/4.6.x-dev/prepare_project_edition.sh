@@ -120,6 +120,7 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
   docker exec install_dependencies composer require ibexa/connector-ai:$PROJECT_VERSION ibexa/connector-openai:$PROJECT_VERSION --no-scripts --ansi --no-update
   docker exec install_dependencies composer require ibexa/collaboration:$PROJECT_VERSION ibexa/share:$PROJECT_VERSION --no-scripts --ansi --no-update
   docker exec install_dependencies composer require ibexa/product-catalog-date-time-attribute:$PROJECT_VERSION --no-scripts --ansi --no-update
+  docker exec install_dependencies composer require ibexa/product-catalog-symbol-attribute:$PROJECT_VERSION --no-scripts --ansi --no-update
 fi
 if [[ "$PROJECT_EDITION" == "commerce" ]]; then
   docker exec install_dependencies composer require ibexa/discounts:$PROJECT_VERSION ibexa/discounts-codes:$PROJECT_VERSION --no-scripts --ansi --no-update
