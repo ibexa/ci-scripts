@@ -287,12 +287,16 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/consol
 #ddev php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/share/src/bundle/Resources/config/schema.yaml | ddev mysql
 #ddev php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/connector-ai/src/bundle/Resources/config/schema.yaml | ddev mysql
 
-# Generate new GraphQL schema if used (while admin-ui doesn't use it anymore)
-# docker compose exec -T --user www-data app sh -c 'php bin/console cache:pool:clear ${CACHE_POOL:-cache.tagaware.filesystem}'
-#docker compose --env-file=.env exec -T --user www-data app sh -c "composer require ibexa/graphql --no-interaction"
+# Clear persistence cache pool (when using Redis or Memcached)
 if [[ "$COMPOSE_FILE" == *"redis.yml"* ]]; then
     docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console cache:pool:clear --all"
 fi
+
+# Migration (update 'company' content type)
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:migrations:import vendor/ibexa/corporate-account/src/bundle/Resources/migrations/2025_07_08_09_27_set_container_to_company.yaml"
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:migrations:migrate --file=2025_07_08_09_27_set_container_to_company.yaml --siteaccess=admin"
+
+# Generate new GraphQL schema if used (while admin-ui doesn't use it anymore)
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
 
 # reindex
