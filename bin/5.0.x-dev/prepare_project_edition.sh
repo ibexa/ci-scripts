@@ -295,6 +295,10 @@ fi
 # Migration (update 'company' content type)
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:migrations:import vendor/ibexa/corporate-account/src/bundle/Resources/migrations/2025_07_08_09_27_set_container_to_company.yaml"
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:migrations:migrate --file=2025_07_08_09_27_set_container_to_company.yaml --siteaccess=admin"
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:migrations:import vendor/ibexa/product-catalog/src/bundle/Resources/migrations/2025_07_09_13_52_mark_product_category_container.yaml"
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:migrations:migrate --file=2025_07_09_13_52_mark_product_category_container.yaml --siteaccess=admin"
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:migrations:import vendor/ibexa/taxonomy/src/bundle/Resources/install/migrations/2025_08_09_14_47_mark_tag_as_container.yaml"
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:migrations:migrate --file=2025_08_09_14_47_mark_tag_as_container.yaml --siteaccess=admin"
 
 # Generate new GraphQL schema if used (while admin-ui doesn't use it anymore)
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
