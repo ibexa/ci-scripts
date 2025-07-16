@@ -202,7 +202,7 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "composer confi
 # Update required PHP version
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer require --no-update 'php:>=8.3'"
 # Update required Symfony version
-docker compose --env-file=.env exec -T --user www-data app sh -c "composer config extra.symfony.require '7.2.*'"
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer config extra.symfony.require '7.3.*'"
 
 echo "> Remove cache dir"
 docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cache/*"
@@ -213,25 +213,25 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "composer requi
   ibexa/commerce:5.0.x-dev \
   ibexa/behat:5.0.x-dev \
   ibexa/docker:5.0.x-dev \
-  symfony/console:^7.2 \
-  symfony/dotenv:^7.2 \
-  symfony/framework-bundle:^7.2 \
-  symfony/runtime:^7.2 \
-  symfony/yaml:^7.2 \
+  symfony/console:^7.3 \
+  symfony/dotenv:^7.3 \
+  symfony/framework-bundle:^7.3 \
+  symfony/runtime:^7.3 \
+  symfony/yaml:^7.3 \
 ;"
 
 # TMP: admin-ui-assets and headless-assets need to be on a tag
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer require --no-update \
-  ibexa/admin-ui-assets:v5.0.0-beta2 \
-  ibexa/headless-assets:v5.0.0-beta1 \
+  ibexa/admin-ui-assets:v5.0.0-rc1 \
+  ibexa/headless-assets:v5.0.0-rc1 \
 ;"
 
 # Upgrade Ibexa and Symfony packages (dev tools)
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer require --dev --no-update \
   ibexa/rector:5.0.x-dev \
-  symfony/debug-bundle:^7.2 \
-  symfony/stopwatch:^7.2 \
-  symfony/web-profiler-bundle:^7.2 \
+  symfony/debug-bundle:^7.3 \
+  symfony/stopwatch:^7.3 \
+  symfony/web-profiler-bundle:^7.3 \
 ;"
 
 # Remove Php82HideDeprecationsErrorHandler
@@ -251,8 +251,10 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "rm symfony.loc
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer recipes:install ibexa/commerce --force --yes -v"
 
 # Swap tsconfig.json usage and creation
-docker compose --env-file=.env exec -T --user www-data app sh -c "perl -0pe 's/\"ibexa:encore:compile\": \"symfony-cmd\",\n\s+\"yarn ibexa-generate-tsconfig\": \"script\"/\"yarn ibexa-generate-tsconfig\": \"script\",\n            \"ibexa:encore:compile\": \"symfony-cmd\"/gms' -i composer.json"
-                                                                  
+docker compose --env-file=.env exec -T --user www-data app sh -c "perl -0pe 's/\"ibexa:encore:compile --config-name\": \"symfony-cmd\",\n\s+\"yarn ibexa-generate-tsconfig\": \"script\"/\"yarn ibexa-generate-tsconfig\": \"script\",\n            \"ibexa:encore:compile\": \"symfony-cmd\"/gms' -i composer.json"
+
+docker compose --env-file=.env exec -T --user www-data app sh -c "perl -ne 'print unless /IbexaIconsBundle/' -i config/bundles.php"                     
+
  
 # Manually clear cache to ensure scripts won't use a piece of it
 docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cache"
