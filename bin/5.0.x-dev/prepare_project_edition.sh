@@ -240,9 +240,6 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "composer confi
 # Update packages / Install new dependencies
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer update --with-all-dependencies --no-scripts --verbose"
 
-# TMP DEPENDENCIES
-docker compose --env-file=.env exec -T --user www-data app sh -c "composer require 'ibexa/installer:dev-alter-sequence as 5.0.x-dev' --no-scripts"
-
 # TMP: Move to development recipes
 docker compose --env-file=.env exec -T --user www-data app sh -c "composer config extra.symfony.endpoint \"https://api.github.com/repos/ibexa/recipes-dev/contents/index.json?ref=flex/main\""
 # Reset recipes
