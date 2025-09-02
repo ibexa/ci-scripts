@@ -195,7 +195,7 @@ else
     docker exec ibexa-db-1 sh -c "mysql -V"
 fi
 
-if [[ "$COMPOSE_FILE" == *"redis.yml"* ]]; then
+if [[ "$COMPOSE_FILE" == *"redis"*.yml ]]; then
     echo '> Display Redis version for debugging'
     docker exec ibexa-redis-1 sh -c "redis-cli --version"
 fi
