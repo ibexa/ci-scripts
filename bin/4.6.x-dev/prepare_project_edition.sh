@@ -195,6 +195,11 @@ else
     docker exec ibexa-db-1 sh -c "mysql -V"
 fi
 
+echo '> Display Redis version for debugging'
+if [[ "$COMPOSE_FILE" == *"redis.yml"* ]]; then
+    docker exec ibexa-redis-1 sh -c "redis-cli --version"
+fi
+
 echo '> Generate GraphQL schema'
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
 
