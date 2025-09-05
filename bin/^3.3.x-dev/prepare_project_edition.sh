@@ -164,6 +164,18 @@ echo '> Install data'
 docker compose --env-file=.env exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install --skip-indexing"
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:reindex"
 
+echo '> Display database version for debugging'
+if [[ "$COMPOSE_FILE" == *"db-postgresql.yml"* ]]; then
+    docker exec ibexa-db-1 sh -c "psql -V"
+else
+    docker exec ibexa-db-1 sh -c "mysql -V"
+fi
+
+if [[ "$COMPOSE_FILE" == *"redis"*.yml ]]; then
+    echo '> Display Redis version for debugging'
+    docker exec ibexa-redis-1 sh -c "redis-cli --version"
+fi
+
 echo '> Generate GraphQL schema'
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
 
