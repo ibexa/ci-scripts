@@ -120,7 +120,7 @@ if [ -f dependencies.json ]; then
 fi
 
 # Install correct product variant
-docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
+docker exec install_dependencies composer require -vvv ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
 
 # Init a repository to avoid Composer asking questions
 docker exec install_dependencies git config --global --add safe.directory /var/www && git init && git add .
