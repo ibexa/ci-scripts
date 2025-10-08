@@ -55,6 +55,7 @@ elif [[ $PROJECT_VERSION == *"v4.6"* ]]; then
       docker exec install_dependencies composer require ibexa/collaboration:$PROJECT_VERSION ibexa/share:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
       docker exec install_dependencies composer require ibexa/product-catalog-date-time-attribute:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
       docker exec install_dependencies composer require ibexa/product-catalog-symbol-attribute:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
+      docker exec install_dependencies composer require ibexa/integrated-help:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
     fi
     if [[ "$PROJECT_EDITION" == "commerce" ]]; then
       docker exec install_dependencies composer require ibexa/discounts:$PROJECT_VERSION ibexa/discounts-codes:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
