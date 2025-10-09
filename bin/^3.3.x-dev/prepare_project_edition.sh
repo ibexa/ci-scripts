@@ -33,6 +33,7 @@ mkdir -p $PROJECT_BUILD_DIR && cd $PROJECT_BUILD_DIR
 docker run --name install_dependencies -d \
 --volume=${PROJECT_BUILD_DIR}:/var/www:cached \
 --volume=${HOME}/.composer:/root/.composer \
+--volume=${HOME}/.ssh:/root/.ssh \
 -e APP_ENV -e APP_DEBUG  \
 -e COMPOSER_MAX_PARALLEL_HTTP \
 -e PHP_INI_ENV_memory_limit -e COMPOSER_MEMORY_LIMIT \
