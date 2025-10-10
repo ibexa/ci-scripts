@@ -190,7 +190,7 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "php /scripts/w
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:reindex"
 
 echo '> Display database version for debugging'
-if [[ "$COMPOSE_FILE" == *"db-postgresql.yml"* ]]; then
+if [[ "$COMPOSE_FILE" == *"db-postgresql"*.yml ]]; then
     docker exec ibexa-db-1 sh -c "psql -V"
 else
     docker exec ibexa-db-1 sh -c "mysql -V"
