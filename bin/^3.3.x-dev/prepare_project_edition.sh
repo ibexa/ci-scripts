@@ -55,7 +55,7 @@ if [ -f ${DEPENDENCY_PACKAGE_DIR}/dependencies.json ]; then
     fi
 fi
 
-docker exec install_dependencies composer update --ansi
+docker exec install_dependencies composer update -vvv --ansi
 
 # Move dependency to directory available for docker volume
 echo "> Move ${DEPENDENCY_PACKAGE_DIR} to ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}"
