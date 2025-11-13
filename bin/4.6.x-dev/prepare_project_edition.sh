@@ -139,8 +139,20 @@ if [ -f dependencies.json ]; then
             echo ">> Private or fork repository detected, adding VCS to Composer repositories"
             docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
         fi
-        jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
-        mv composer.json.new composer.json
+        jq --argjson ibexaPackages "$IBEXA_PACKAGES" '
+        if .repositories | type == "object" then
+            .repositories.ibexa.exclude = $ibexaPackages
+        else
+            .repositories = ( .repositories
+            | map(
+                if .type == "composer" and .url == "https://updates.ibexa.co"
+                    then . + { "exclude": $ibexaPackages }
+                    else .
+                end
+                )
+            )
+        end
+' composer.json > composer.json.new && mv composer.json.new composer.json
     done
 fi
 
