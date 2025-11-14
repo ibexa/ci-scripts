@@ -88,7 +88,6 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
     done
 
     composer repository add ibexa "{\"type\": \"composer\", \"url\":\"https://updates.ibexa.co\", \"exclude\": $IBEXA_PACKAGES}"
-   
 fi
 
 echo "> Make composer use tested dependency"
