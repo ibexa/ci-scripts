@@ -92,8 +92,8 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
             # Composer 2.8 and earlier: repositories is an object
             .repositories.ibexa.exclude = $ibexaPackages
         elif .repositories and (.repositories | type) == "array" then
-            # Composer 2.9+: repositories is an array
-            (.repositories[] | select(.url == "https://updates.ibexa.co") | .exclude) = $ibexaPackages
+            # Composer 2.9+: repositories is an array with name field
+            (.repositories[] | select(.name == "ibexa") | .exclude) = $ibexaPackages
         else
             .
         end
