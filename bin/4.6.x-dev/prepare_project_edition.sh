@@ -148,13 +148,7 @@ if [ -f dependencies.json ]; then
             docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
         fi
         # cat composer.json
-        jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '
-        if (.require | type) == "object" then
-            .require += { ($package): $requirement }
-        else
-            .
-        end
-        ' composer.json > composer.json.new && mv composer.json.new composer.json
+        composer require "$PACKAGE_NAME:$REQUIREMENT" --no-update
 
         # cat composer.json.new
         # mv composer.json.new composer.json
