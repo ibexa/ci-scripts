@@ -84,10 +84,12 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
             jq -r --arg projectEdition "ibexa/$PROJECT_EDITION" \
             '.require | with_entries(select(.key | contains("ibexa/"))) | with_entries(select(.key == $projectEdition | not )) | keys')
         IBEXA_PACKAGES=$(echo "$IBEXA_PACKAGES" | jq --argjson editionPackages "$EDITION_PACKAGES" '. + $editionPackages')
-
     done
 
-    jq --argjson ibexaPackages "$IBEXA_PACKAGES" '.repositories.ibexa.exclude = $ibexaPackages' composer.json > composer.json.new
+    # *** FIXED SECTION BELOW ***
+    jq --argjson ibexaPackages "$IBEXA_PACKAGES" \
+       '(.repositories[] | select(.url=="https://updates.ibexa.co") | .exclude) = $ibexaPackages' \
+       composer.json > composer.json.new
     mv composer.json.new composer.json
 fi
 
@@ -139,17 +141,8 @@ if [ -f dependencies.json ]; then
             echo ">> Private or fork repository detected, adding VCS to Composer repositories"
             docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
         fi
-        jq --argjson ibexaPackages "$IBEXA_PACKAGES" '
-        .repositories = (
-            .repositories
-            | map(
-                if .type == "composer" and .url == "https://updates.ibexa.co"
-                    then . + { "exclude": $ibexaPackages }
-                    else .
-                end
-            )
-        )
-' composer.json > composer.json.new && mv composer.json.new composer.json
+        jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
+        mv composer.json.new composer.json
     done
 fi
 
