@@ -147,10 +147,17 @@ if [ -f dependencies.json ]; then
             echo ">> Private or fork repository detected, adding VCS to Composer repositories"
             docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
         fi
-        cat composer.json
-        jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
-        cat composer.json.new
-        mv composer.json.new composer.json
+        # cat composer.json
+        jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '
+        if (.require | type) == "object" then
+            .require += { ($package): $requirement }
+        else
+            .
+        end
+        ' composer.json > composer.json.new && mv composer.json.new composer.json
+
+        # cat composer.json.new
+        # mv composer.json.new composer.json
     done
 fi
 
