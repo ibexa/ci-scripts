@@ -86,8 +86,7 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
         IBEXA_PACKAGES=$(echo "$IBEXA_PACKAGES" | jq --argjson editionPackages "$EDITION_PACKAGES" '. + $editionPackages')
 
     done
-    jq --argjson ibexaPackages "$IBEXA_PACKAGES" '.repositories.ibexa.exclude = $ibexaPackages' composer.json > composer.json.new
-    mv composer.json.new composer.json
+    composer repository add ibexa "{\"type\": \"composer\", \"url\":\"https://updates.ibexa.co\", \"exclude\": $IBEXA_PACKAGES}"
 fi
 
 echo "> Make composer use tested dependency"
