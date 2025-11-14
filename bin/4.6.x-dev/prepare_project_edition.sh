@@ -86,10 +86,16 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
         IBEXA_PACKAGES=$(echo "$IBEXA_PACKAGES" | jq --argjson editionPackages "$EDITION_PACKAGES" '. + $editionPackages')
     done
 
-    # *** FIXED SECTION BELOW ***
+    echo "==== composer.json BEFORE jq ===="
+    cat composer.json
+
     jq --argjson ibexaPackages "$IBEXA_PACKAGES" \
        '(.repositories[] | select(.url=="https://updates.ibexa.co") | .exclude) = $ibexaPackages' \
        composer.json > composer.json.new
+
+    echo "==== composer.json.new AFTER jq ===="
+    cat composer.json.new
+    
     mv composer.json.new composer.json
 fi
 
