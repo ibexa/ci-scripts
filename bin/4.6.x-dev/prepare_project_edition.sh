@@ -86,16 +86,18 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
         IBEXA_PACKAGES=$(echo "$IBEXA_PACKAGES" | jq --argjson editionPackages "$EDITION_PACKAGES" '. + $editionPackages')
     done
 
-    echo "==== composer.json BEFORE jq ===="
-    cat composer.json
-
-    jq --argjson ibexaPackages "$IBEXA_PACKAGES" \
-       '(.repositories[] | select(.url=="https://updates.ibexa.co") | .exclude) = $ibexaPackages' \
-       composer.json > composer.json.new
-
-    echo "==== composer.json.new AFTER jq ===="
-    cat composer.json.new
-
+    # Handle both Composer 2.8 (object format) and 2.9+ (array format) for repositories
+    jq --argjson ibexaPackages "$IBEXA_PACKAGES" '
+        if .repositories and (.repositories | type) == "object" then
+            # Composer 2.8 and earlier: repositories is an object
+            .repositories.ibexa.exclude = $ibexaPackages
+        elif .repositories and (.repositories | type) == "array" then
+            # Composer 2.9+: repositories is an array
+            (.repositories[] | select(.url == "https://updates.ibexa.co") | .exclude) = $ibexaPackages
+        else
+            .
+        end
+    ' composer.json > composer.json.new
     mv composer.json.new composer.json
 fi
 
@@ -147,25 +149,8 @@ if [ -f dependencies.json ]; then
             echo ">> Private or fork repository detected, adding VCS to Composer repositories"
             docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
         fi
-        # cat composer.json
-        jq '
-        if .repositories and (.repositories | type) == "object" then
-            .repositories = [.repositories | to_entries[] | .value + {name: .key}]
-        else
-            .
-        end
-        ' composer.json > composer.json.tmp && mv composer.json.tmp composer.json
-
-        jq '
-        if .repositories and (.repositories | type) == "array" then
-        .repositories = (.repositories | map({(.name): .}) | add)
-        else
-        .
-        end
-        ' composer.json > composer.json.tmp && mv composer.json.tmp composer.json
-       
-        # cat composer.json.new
-        # mv composer.json.new composer.json
+        jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
+        mv composer.json.new composer.json
     done
 fi
 
