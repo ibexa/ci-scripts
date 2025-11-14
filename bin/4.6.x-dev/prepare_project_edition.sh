@@ -156,9 +156,14 @@ if [ -f dependencies.json ]; then
         end
         ' composer.json > composer.json.tmp && mv composer.json.tmp composer.json
 
-        jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" \
-        '.require += { ($package): $requirement }' \
-        composer.json > composer.json.new && mv composer.json.new composer.json
+        jq '
+        if .repositories and (.repositories | type) == "array" then
+        .repositories = (.repositories | map({(.name): .}) | add)
+        else
+        .
+        end
+        ' composer.json > composer.json.tmp && mv composer.json.tmp composer.json
+       
         # cat composer.json.new
         # mv composer.json.new composer.json
     done
