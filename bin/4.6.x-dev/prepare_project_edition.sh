@@ -88,8 +88,7 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
     done
 
     composer repository add ibexa "{\"type\": \"composer\", \"url\":\"https://updates.ibexa.co\", \"exclude\": $IBEXA_PACKAGES}"
-    # jq --argjson ibexaPackages "$IBEXA_PACKAGES" '.repositories[] | select(.name == "ibexa")' composer.json > composer.json.new
-    # mv composer.json.new composer.json
+   
 fi
 
 echo "> Make composer use tested dependency"
