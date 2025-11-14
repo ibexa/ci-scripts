@@ -84,20 +84,10 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
             jq -r --arg projectEdition "ibexa/$PROJECT_EDITION" \
             '.require | with_entries(select(.key | contains("ibexa/"))) | with_entries(select(.key == $projectEdition | not )) | keys')
         IBEXA_PACKAGES=$(echo "$IBEXA_PACKAGES" | jq --argjson editionPackages "$EDITION_PACKAGES" '. + $editionPackages')
+
     done
 
-    # Handle both Composer 2.8 (object format) and 2.9+ (array format) for repositories
-    jq --argjson ibexaPackages "$IBEXA_PACKAGES" '
-        if .repositories and (.repositories | type) == "object" then
-            # Composer 2.8 and earlier: repositories is an object
-            .repositories.ibexa.exclude = $ibexaPackages
-        elif .repositories and (.repositories | type) == "array" then
-            # Composer 2.9+: repositories is an array with name field
-            (.repositories[] | select(.name == "ibexa") | .exclude) = $ibexaPackages
-        else
-            .
-        end
-    ' composer.json > composer.json.new
+    jq --argjson ibexaPackages "$IBEXA_PACKAGES" '.repositories[] | select(.name == "ibexa")' composer.json > composer.json.new
     mv composer.json.new composer.json
 fi
 
