@@ -172,6 +172,8 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/consol
 echo '> Display database version for debugging'
 if [[ "$COMPOSE_FILE" == *"db-postgresql"*.yml ]]; then
     docker exec ibexa-db-1 sh -c "psql -V"
+elif [[ "$COMPOSE_FILE" == *"db-mariadb"*.yml ]]; then
+    docker exec ibexa-db-1 sh -c "mariadb --version"
 else
     docker exec ibexa-db-1 sh -c "mysql -V"
 fi
