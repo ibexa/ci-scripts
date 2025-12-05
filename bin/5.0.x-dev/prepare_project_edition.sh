@@ -113,6 +113,11 @@ docker exec install_dependencies composer recipes:install ${DEPENDENCY_PACKAGE_N
 # Install Behat and Docker packages
 docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --ansi --no-update
 
+# Install opt-in packages
+if [[ "$PROJECT_EDITION" != "oss" ]]; then
+  docker exec install_dependencies composer require ibexa/connector-anthropic:$PROJECT_VERSION --no-scripts --ansi --no-update
+fi
+
 # Add other dependencies if required
 if [ -f dependencies.json ]; then
     COUNT=$(cat dependencies.json | jq '.packages | length' )
