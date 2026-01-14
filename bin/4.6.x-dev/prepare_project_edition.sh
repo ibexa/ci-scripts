@@ -118,7 +118,7 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
   # ibexa/connector-qualifio is already being installed with the project
   docker exec install_dependencies composer require ibexa/connector-ai:$PROJECT_VERSION ibexa/connector-openai:$PROJECT_VERSION --no-scripts --ansi --no-update
   docker exec install_dependencies composer require ibexa/collaboration:$PROJECT_VERSION ibexa/share:$PROJECT_VERSION --no-scripts --ansi --no-update
-  if [[ "$PHP_IMAGE" != *"node-18"* ]]; then
+  if [[ "$PHP_IMAGE" != *"node18"* ]]; then
     docker exec install_dependencies composer require ibexa/fieldtype-richtext-rte:$PROJECT_VERSION --no-scripts --ansi --no-update
   fi
   docker exec install_dependencies composer require ibexa/product-catalog-date-time-attribute:$PROJECT_VERSION --no-scripts --ansi --no-update
