@@ -2,7 +2,7 @@
 set -e
 
 PROJECT_EDITION=$1
-PROJECT_VERSION=$2
+PROJECT_VERSION=4.6.x-dev
 PROJECT_BUILD_DIR=${HOME}/build/project
 export COMPOSE_FILE=$3
 export PHP_IMAGE=${4-ghcr.io/ibexa/docker/php:8.3-node18}
@@ -90,15 +90,15 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
     composer repository add ibexa "{\"type\": \"composer\", \"url\":\"https://updates.ibexa.co\", \"exclude\": $IBEXA_PACKAGES}"
 fi
 
-echo "> Make composer use tested dependency"
-JSON_STRING=$( jq -n \
-                  --arg packageVersion "$DEPENDENCY_PACKAGE_VERSION" \
-                  --arg packageName "$DEPENDENCY_PACKAGE_NAME" \
-                  --arg packageDir "./$DEPENDENCY_PACKAGE_NAME" \
-                  '{"type": "path", "url": $packageDir, "options": { "symlink": false , "versions": { ($packageName): $packageVersion}}}' )
+# echo "> Make composer use tested dependency"
+# JSON_STRING=$( jq -n \
+#                   --arg packageVersion "$DEPENDENCY_PACKAGE_VERSION" \
+#                   --arg packageName "$DEPENDENCY_PACKAGE_NAME" \
+#                   --arg packageDir "./$DEPENDENCY_PACKAGE_NAME" \
+#                   '{"type": "path", "url": $packageDir, "options": { "symlink": false , "versions": { ($packageName): $packageVersion}}}' )
 
-composer config repositories.localDependency "$JSON_STRING"
-composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_VERSION" --no-update
+# composer config repositories.localDependency "$JSON_STRING"
+# composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_VERSION" --no-update
 
 # Install correct product variant
 docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
@@ -144,7 +144,8 @@ echo "> Display composer.json for debugging"
 cat composer.json
 
 # Create a default Behat configuration file
-cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
+touch behat.yaml
+# cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
 
 # Depenencies are installed and container can be removed
 docker container stop install_dependencies
@@ -193,5 +194,140 @@ fi
 
 echo '> Generate GraphQL schema'
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
+
+########################################################################################################################
+
+# Delete old GraphQL schema
+docker compose --env-file=.env exec -T --user www-data app sh -c "rm -r config/graphql"
+
+# Remove Stimulus bootstrap
+docker compose --env-file=.env exec -T --user www-data app sh -c "rm assets/bootstrap.js"
+docker compose --env-file=.env exec -T --user www-data app sh -c "sed -i '/bootstrap/d' assets/app.js"
+docker compose --env-file=.env exec -T --user www-data app sh -c "sed -i '/start the Stimulus application/d' assets/app.js"
+
+# Move from annotation to attribute
+#docker compose sed -i 's/type: annotation/type: attribute/g' config/routes/annotations.yaml
+docker compose --env-file=.env exec -T --user www-data app sh -c "rm config/routes/annotations.yaml"
+docker compose --env-file=.env exec -T --user www-data app sh -c "rm config/routes.yaml"
+
+# TMP: Accept dev version (5.0.x-dev)
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer config minimum-stability dev"
+
+# Update required PHP version
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer require --no-update 'php:>=8.3'"
+# Update required Symfony version
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer config extra.symfony.require '7.3.*'"
+
+echo "> Remove cache dir"
+docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cache/*"
+docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cache/behat/*"
+
+# Upgrade Ibexa and Symfony packages (main app)
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer require --no-update \
+  ibexa/commerce:5.0.x-dev \
+  ibexa/behat:5.0.x-dev \
+  ibexa/docker:5.0.x-dev \
+  symfony/console:^7.3 \
+  symfony/dotenv:^7.3 \
+  symfony/framework-bundle:^7.3 \
+  symfony/runtime:^7.3 \
+  symfony/yaml:^7.3 \
+;"
+
+# TMP: admin-ui-assets and headless-assets need to be on a tag
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer require --no-update \
+  ibexa/admin-ui-assets:v5.0.0-rc1 \
+  ibexa/headless-assets:v5.0.0-rc1 \
+;"
+
+# Upgrade Ibexa and Symfony packages (dev tools)
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer require --dev --no-update \
+  ibexa/rector:5.0.x-dev \
+  symfony/debug-bundle:^7.3 \
+  symfony/stopwatch:^7.3 \
+  symfony/web-profiler-bundle:^7.3 \
+;"
+
+# Remove Php82HideDeprecationsErrorHandler
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer config --unset extra.runtime.error_handler"
+
+# Update packages / Install new dependencies
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer update --with-all-dependencies --no-scripts --verbose"
+
+# TMP: Move to development recipes
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer config extra.symfony.endpoint \"https://api.github.com/repos/ibexa/recipes-dev/contents/index.json?ref=flex/main\""
+# Reset recipes
+docker compose --env-file=.env exec -T --user www-data app sh -c "rm symfony.lock"
+# Run recipes
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer recipes:install ibexa/commerce --force --yes -v"
+
+# Swap tsconfig.json usage and creation
+docker compose --env-file=.env exec -T --user www-data app sh -c "perl -0pe 's/\"ibexa:encore:compile --config-name\": \"symfony-cmd\",\n\s+\"yarn ibexa-generate-tsconfig\": \"script\"/\"yarn ibexa-generate-tsconfig\": \"script\",\n            \"ibexa:encore:compile\": \"symfony-cmd\"/gms' -i composer.json"
+
+docker compose --env-file=.env exec -T --user www-data app sh -c "perl -ne 'print unless /IbexaIconsBundle/' -i config/bundles.php"                     
+
+ 
+# Manually clear cache to ensure scripts won't use a piece of it
+docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cache"
+
+# A.k.a "auto-scripts" (mainly JS and assets stuffs)
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer run-script post-update-cmd"
+
+# Database update
+# docker exec ibexa-db-1 sh -c "mysql -u ezp -pSetYourOwnPassword"
+# docker compose --env-file=.env exec -T --user www-data app sh -c "mysql < vendor/ibexa/installer/upgrade/db/mysql/ibexa-4.6.latest-to-5.0.0.sql"
+
+echo '> Update database schema'
+if [[ "$COMPOSE_FILE" == *"db-postgresql.yml"* ]]; then
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(cat vendor/ibexa/installer/upgrade/db/postgresql/ibexa-4.6.latest-to-5.0.0.sql | grep -v '\-- ')\""
+else
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(cat vendor/ibexa/installer/upgrade/db/mysql/ibexa-4.6.latest-to-5.0.0.sql | grep -v '\-- ')\""
+fi
+
+# LTS Update related schemas to inject only if the add-on was never installed
+# keep an eye!
+#ddev php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/collaboration/src/bundle/Resources/config/schema.yaml | ddev mysql
+
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/collaboration/src/bundle/Resources/config/schema.yaml)\""
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/share/src/bundle/Resources/config/schema.yaml)\""
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/connector-ai/src/bundle/Resources/config/schema.yaml)\""
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/product-catalog-date-time-attribute/src/bundle/Resources/config/schema.yaml)\""
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/discounts/src/bundle/Resources/config/schema.yaml)\""
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console doctrine:query:sql \"\$(php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/discounts-codes/src/bundle/Resources/config/schema.yaml)\""
+
+# docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/share/src/bundle/Resources/config/schema.yaml"
+# docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/connector-ai/src/bundle/Resources/config/schema.yaml"
+#ddev php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/share/src/bundle/Resources/config/schema.yaml | ddev mysql
+#ddev php bin/console ibexa:doctrine:schema:dump-sql vendor/ibexa/connector-ai/src/bundle/Resources/config/schema.yaml | ddev mysql
+
+# Clear persistence cache pool (when using Redis or Memcached)
+if [[ "$COMPOSE_FILE" == *"redis.yml"* ]]; then
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console cache:pool:clear --all"
+fi
+
+# Migration (update 'company' content type)
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:migrations:import vendor/ibexa/corporate-account/src/bundle/Resources/migrations/2025_07_08_09_27_set_container_to_company.yaml"
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:migrations:migrate --file=2025_07_08_09_27_set_container_to_company.yaml --siteaccess=admin"
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:migrations:import vendor/ibexa/product-catalog/src/bundle/Resources/migrations/2025_07_09_13_52_mark_product_category_container.yaml"
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:migrations:migrate --file=2025_07_09_13_52_mark_product_category_container.yaml --siteaccess=admin"
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:migrations:import vendor/ibexa/taxonomy/src/bundle/Resources/install/migrations/2025_08_09_14_47_mark_tag_as_container.yaml"
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:migrations:migrate --file=2025_08_09_14_47_mark_tag_as_container.yaml --siteaccess=admin"
+
+# Generate new GraphQL schema if used (while admin-ui doesn't use it anymore)
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:graphql:generate-schema"
+
+# reindex
+docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:reindex"
+
+docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf behat_ibexa_commerce.yaml"
+docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf behat_ibexa_oss.yaml"
+# docker compose --env-file=.env exec -T --user www-data app sh -c "git add . && git commit -m 'current state'"
+
+
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer require --dev ibexa/behat:~5.0.x-dev --no-scripts --no-plugins"
+docker compose --env-file=.env exec -T --user www-data app sh -c "composer recipes:install ibexa/behat --force --reset -vv"
+
+docker compose --env-file=.env exec -T --user www-data app sh -c "cp behat_ibexa_commerce.yaml behat.yaml"
+
 
 echo '> Done, ready to run tests'
