@@ -7,6 +7,7 @@ PROJECT_BUILD_DIR=${HOME}/build/project
 export COMPOSE_FILE=$3
 export PHP_IMAGE=${4-ghcr.io/ibexa/docker/php:8.3-node18}
 export COMPOSER_MAX_PARALLEL_HTTP=6 # Reduce Composer parallelism to work around Github Actions network errors
+export SYMFONY_DEPRECATIONS_HELPER=disabled # Prevent Symfony from turning deprecations into exceptions
 
 if [[ -n "${DOCKER_PASSWORD}" ]]; then
     echo "> Set up Docker credentials"
@@ -35,6 +36,7 @@ docker run --name install_dependencies -d \
 --volume=${HOME}/.composer:/root/.composer \
 -e APP_ENV -e APP_DEBUG  \
 -e COMPOSER_MAX_PARALLEL_HTTP \
+-e SYMFONY_DEPRECATIONS_HELPER \
 -e PHP_INI_ENV_memory_limit -e COMPOSER_MEMORY_LIMIT \
 -e COMPOSER_NO_INTERACTION=1 \
 ${PHP_IMAGE}
