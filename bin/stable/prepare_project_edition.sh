@@ -65,6 +65,7 @@ elif [[ $PROJECT_VERSION == *"v4.6"* ]]; then
     fi
     if [[ "$PROJECT_EDITION" == "commerce" ]]; then
       docker exec install_dependencies composer require ibexa/discounts:$PROJECT_VERSION ibexa/discounts-codes:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
+      docker exec install_dependencies composer require ibexa/shopping-list:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
     fi
 else
     echo "> Installing dependencies for v5"

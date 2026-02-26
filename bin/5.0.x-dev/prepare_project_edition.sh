@@ -117,6 +117,9 @@ docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION i
 if [[ "$PROJECT_EDITION" != "oss" ]]; then
   docker exec install_dependencies composer require ibexa/connector-anthropic:$PROJECT_VERSION --no-scripts --ansi --no-update
 fi
+if [[ "$PROJECT_EDITION" == "commerce" ]]; then
+  docker exec install_dependencies composer require ibexa/shopping-list:$PROJECT_VERSION --no-scripts --ansi --no-update
+fi
 
 # Add other dependencies if required
 if [ -f dependencies.json ]; then
@@ -126,7 +129,7 @@ if [ -f dependencies.json ]; then
         PACKAGE_NAME=$(cat dependencies.json | jq -r .packages[$i].package)
         REQUIREMENT=$(cat dependencies.json | jq -r .packages[$i].requirement)
         SHOULD_BE_ADDED_AS_VCS=$(cat dependencies.json | jq -r .packages[$i].shouldBeAddedAsVCS)
-        if [[ $SHOULD_BE_ADDED_AS_VCS == "true" ]] ; then 
+        if [[ $SHOULD_BE_ADDED_AS_VCS == "true" ]] ; then
             echo ">> Private or fork repository detected, adding VCS to Composer repositories"
             docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
         fi
