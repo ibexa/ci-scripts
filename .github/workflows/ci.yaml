@@ -16,19 +16,14 @@ jobs:
         php:
           - '8.0'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
 
-      - name: Setup PHP Action
-        uses: shivammathur/setup-php@v2
+      - uses: ibexa/gh-workflows/actions/composer-install@main
         with:
-          php-version: ${{ matrix.php }}
-          coverage: none
-          extensions: 'pdo_sqlite, gd'
-          tools: cs2pr
-
-      - uses: "ramsey/composer-install@v1"
-        with:
-          dependency-versions: "highest"
+          gh-client-id: ${{ secrets.AUTOMATION_CLIENT_ID }}
+          gh-client-secret: ${{ secrets.AUTOMATION_CLIENT_SECRET }}
+          satis-network-key: ${{ secrets.SATIS_NETWORK_KEY }}
+          satis-network-token: ${{ secrets.SATIS_NETWORK_TOKEN }}
 
       - name: Run code style check
         run: composer run-script check-cs -- --format=checkstyle | cs2pr
@@ -44,24 +39,18 @@ jobs:
         php:
           - '7.3'
           - '7.4'
-          - '8.0'
-          - '8.1'
+          - '8.3'
+          - '8.4'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
 
-      - name: Setup PHP Action
-        uses: shivammathur/setup-php@v2
+      - uses: ibexa/gh-workflows/actions/composer-install@main
         with:
-          php-version: ${{ matrix.php }}
-          coverage: none
-          extensions: pdo_sqlite, gd
-          tools: cs2pr
-
-      - uses: "ramsey/composer-install@v1"
-        with:
-          dependency-versions: "highest"
-          composer-options: "--prefer-dist --no-progress"
+          gh-client-id: ${{ secrets.AUTOMATION_CLIENT_ID }}
+          gh-client-secret: ${{ secrets.AUTOMATION_CLIENT_SECRET }}
+          satis-network-key: ${{ secrets.SATIS_NETWORK_KEY }}
+          satis-network-token: ${{ secrets.SATIS_NETWORK_TOKEN }}
 
       - name: Setup problem matchers for PHPUnit
         run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
