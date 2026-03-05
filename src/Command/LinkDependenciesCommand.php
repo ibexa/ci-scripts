@@ -48,7 +48,7 @@ class LinkDependenciesCommand extends Command
      */
     private $tokenProvider;
 
-    public function __construct(string $outputDirectory = null, ComposerLocalTokenProvider $tokenProvider = null)
+    public function __construct(?string $outputDirectory = null, ?ComposerLocalTokenProvider $tokenProvider = null)
     {
         parent::__construct();
         $this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
@@ -170,7 +170,10 @@ class LinkDependenciesCommand extends Command
 
         foreach ($pullRequestUrls as $pullRequestUrl) {
             $matches = [];
-            preg_match('/.*github.com\/(.*)\/(.*)\/pull\/(\d+).*/', $pullRequestUrl, $matches);
+            if (preg_match('/.*github.com\/(.*)\/(.*)\/pull\/(\d+).*/', $pullRequestUrl, $matches) !== 1) {
+                // Skip invalid PR URLs
+                continue;
+            }
             [, $owner, $repository, $prNumber] = $matches;
             $prNumber = (int)$prNumber;
 
