@@ -68,7 +68,10 @@ elif [[ $PROJECT_VERSION == *"v4.6"* ]]; then
     fi
 else
     echo "> Installing dependencies for v5"
-    docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION ibexa/connector-anthropic:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
+    docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
+    if [[ "$PROJECT_EDITION" != "oss" ]]; then
+      docker exec install_dependencies composer require ibexa/connector-anthropic:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
+    fi
 fi
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
