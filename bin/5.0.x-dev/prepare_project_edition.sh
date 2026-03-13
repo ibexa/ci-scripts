@@ -40,7 +40,7 @@ docker run --name install_dependencies -d \
 ${PHP_IMAGE}
 
 echo "> Setting up website skeleton"
-composer create-project ibexa/website-skeleton:symfony74 . --no-install --ansi
+composer create-project ibexa/website-skeleton:"dev-symfony74 as 5.0.x-dev" . --no-install --ansi
 
 # Add other dependencies if required
 if [ -f ${DEPENDENCY_PACKAGE_DIR}/dependencies.json ]; then
