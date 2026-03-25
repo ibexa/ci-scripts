@@ -70,7 +70,7 @@ if [ -f ./${DEPENDENCY_PACKAGE_NAME}/auth.json ]; then
 fi
 
 if [[ "$PROJECT_EDITION" != "oss" ]]; then
-    composer config repositories.ibexa composer https://updates.ibexa.co
+    composer config repositories.ibexa composer https://satis.services.ibexa.co
 fi
 
 echo "> Make composer use tested dependency"

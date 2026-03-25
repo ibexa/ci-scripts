@@ -70,7 +70,7 @@ if [ -f ./${DEPENDENCY_PACKAGE_NAME}/auth.json ]; then
 fi
 
 if [[ "$PROJECT_EDITION" != "oss" ]]; then
-    composer config repositories.ibexa composer https://updates.ibexa.co
+    composer config repositories.ibexa composer https://satis.services.ibexa.co
 
     editions=(commerce experience content)
 
@@ -86,7 +86,7 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
         IBEXA_PACKAGES=$(echo "$IBEXA_PACKAGES" | jq --argjson editionPackages "$EDITION_PACKAGES" '. + $editionPackages')
 
     done
-    composer repository add ibexa "{\"type\": \"composer\", \"url\":\"https://updates.ibexa.co\", \"exclude\": $IBEXA_PACKAGES}"
+    composer repository add ibexa "{\"type\": \"composer\", \"url\":\"https://satis.services.ibexa.co\", \"exclude\": $IBEXA_PACKAGES}"
 fi
 
 echo "> Make composer use tested dependency"
