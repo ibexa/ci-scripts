@@ -124,6 +124,10 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
   docker exec install_dependencies composer require ibexa/product-catalog-date-time-attribute:$PROJECT_VERSION --no-scripts --ansi --no-update
   docker exec install_dependencies composer require ibexa/product-catalog-symbol-attribute:$PROJECT_VERSION --no-scripts --ansi --no-update
   docker exec install_dependencies composer require ibexa/integrated-help:$PROJECT_VERSION --no-scripts --ansi --no-update
+  cat > config/packages/ibexa_integrated_help.yaml << 'EOF'
+ibexa_integrated_help:
+    enabled: false
+EOF
   if [[ "$PHP_IMAGE" == *"node20"* ]]; then
       docker exec install_dependencies composer require ibexa/elasticsearch8:$PROJECT_VERSION --no-scripts --ansi --no-update
   fi
