@@ -118,6 +118,7 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
   docker exec install_dependencies composer require ibexa/connector-anthropic:$PROJECT_VERSION --no-scripts --ansi --no-update
   docker exec install_dependencies composer require ibexa/connector-gemini:$PROJECT_VERSION --no-scripts --ansi --no-update
   docker exec install_dependencies composer require ibexa/integrated-help:$PROJECT_VERSION --no-scripts --ansi --no-update
+  docker exec install_dependencies composer require ibexa/connector-raptor:$PROJECT_VERSION --no-scripts --ansi --no-update
 fi
 if [[ "$PROJECT_EDITION" == "commerce" ]]; then
   docker exec install_dependencies composer require ibexa/shopping-list:$PROJECT_VERSION --no-scripts --ansi --no-update
