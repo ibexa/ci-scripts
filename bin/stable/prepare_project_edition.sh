@@ -76,7 +76,7 @@ else
       docker exec install_dependencies composer require ibexa/connector-raptor:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
 
       if [[ "${INSTALL_CONNECTOR_QUABLE:-false}" == "true" ]]; then
-        docker exec install_dependencies composer require ibexa/connector-quable:$PROJECT_VERSION --no-scripts --ansi --no-update
+        docker exec install_dependencies composer require ibexa/connector-quable:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
       fi
       
     fi
