@@ -42,6 +42,23 @@ ${PHP_IMAGE}
 echo "> Setting up website skeleton"
 composer create-project ibexa/website-skeleton:$PROJECT_VERSION . --no-install --ansi
 
+# Configure composer audit for unresolvable advisories
+docker exec install_dependencies sh -c '
+  cd /var/www
+
+  PHP_VERSION="$(php -r "echo PHP_MAJOR_VERSION . \".\" . PHP_MINOR_VERSION;")"
+
+  if [ "$PHP_VERSION" = "7.4" ]; then
+    REASON="The affected version of 3rd party component is installed on PHP 7.4. There'\''s no alternative supporting PHP 7.4. Consider upgrading to PHP 8"
+
+    composer config audit.ignore --json "{
+      \"PKSA-7h5p-prw9-w5nr\": \"$REASON\",
+      \"PKSA-sf9j-1gs7-xzvx\": \"$REASON\",
+      \"PKSA-xwpn-zs9j-6wy5\": \"$REASON\"
+    }"
+  fi
+'
+
 # Add other dependencies if required
 if [ -f ${DEPENDENCY_PACKAGE_DIR}/dependencies.json ]; then
     cp ${DEPENDENCY_PACKAGE_DIR}/dependencies.json .
