@@ -71,7 +71,8 @@ docker exec install_dependencies sh -c '
       \"PKSA-2wrf-1xmk-1pky\": \"$REASON\",
       \"PKSA-6319-ffpf-gx66\": \"$REASON\",
       \"PKSA-n7sg-8f52-pqtf\": \"$REASON\",
-      \"PKSA-8kk8-h2xr-h5nx\": \"$REASON\"
+      \"PKSA-8kk8-h2xr-h5nx\": \"$REASON\",
+      \"PKSA-2rbx-bjdx-4d4d\": \"$REASON\"
     }"
   fi
 '
