@@ -42,6 +42,41 @@ ${PHP_IMAGE}
 echo "> Setting up website skeleton"
 composer create-project ibexa/website-skeleton:$PROJECT_VERSION . --no-install --ansi
 
+# Configure composer audit for unresolvable advisories
+docker exec install_dependencies sh -c '
+  cd /var/www
+
+  PHP_VERSION="$(php -r "echo PHP_MAJOR_VERSION . \".\" . PHP_MINOR_VERSION;")"
+
+  if [ "$PHP_VERSION" = "7.4" ]; then
+    REASON="The affected version of 3rd party component is installed on PHP 7.4. There'\''s no alternative supporting PHP 7.4. Consider upgrading to PHP 8"
+
+    composer config audit.ignore --json "{
+      \"PKSA-7h5p-prw9-w5nr\": \"$REASON\",
+      \"PKSA-sf9j-1gs7-xzvx\": \"$REASON\",
+      \"PKSA-xwpn-zs9j-6wy5\": \"$REASON\",
+      \"PKSA-5k7f-wvjj-jrgw\": \"$REASON\",
+      \"PKSA-sjvz-tbbr-vwth\": \"$REASON\",
+      \"PKSA-h8hf-ytnd-5t9q\": \"$REASON\",
+      \"PKSA-wwb1-81rc-pd65\": \"$REASON\",
+      \"PKSA-hgmw-wn4d-hpcy\": \"$REASON\",
+      \"PKSA-kvv6-36cr-fkzb\": \"$REASON\",
+      \"PKSA-n14z-jjjg-g8vd\": \"$REASON\",
+      \"PKSA-3mcc-k66d-pydb\": \"$REASON\",
+      \"PKSA-gw7n-z4yx-7xjt\": \"$REASON\",
+      \"PKSA-dpx1-78wg-1kqs\": \"$REASON\",
+      \"PKSA-21g2-dzjv-sky5\": \"$REASON\",
+      \"PKSA-v3kg-5xkr-pykw\": \"$REASON\",
+      \"PKSA-yhcn-xrg3-68b1\": \"$REASON\",
+      \"PKSA-2wrf-1xmk-1pky\": \"$REASON\",
+      \"PKSA-6319-ffpf-gx66\": \"$REASON\",
+      \"PKSA-n7sg-8f52-pqtf\": \"$REASON\",
+      \"PKSA-8kk8-h2xr-h5nx\": \"$REASON\",
+      \"PKSA-2rbx-bjdx-4d4d\": \"$REASON\"
+    }"
+  fi
+'
+
 # Add other dependencies if required
 if [ -f ${DEPENDENCY_PACKAGE_DIR}/dependencies.json ]; then
     cp ${DEPENDENCY_PACKAGE_DIR}/dependencies.json .
