@@ -49,31 +49,43 @@ docker exec install_dependencies sh -c '
   PHP_VERSION="$(php -r "echo PHP_MAJOR_VERSION . \".\" . PHP_MINOR_VERSION;")"
 
   if [ "$PHP_VERSION" = "7.4" ]; then
-    REASON="The affected version of 3rd party component is installed on PHP 7.4. There'\''s no alternative supporting PHP 7.4. Consider upgrading to PHP 8"
+    REASON="The affected version of 3rd party component is installed on PHP 7.4. There'\''s no alternative supporting PHP 7.4. Consider upgrading to PHP 8.1+"
 
-    composer config audit.ignore --json "{
-      \"PKSA-7h5p-prw9-w5nr\": \"$REASON\",
-      \"PKSA-sf9j-1gs7-xzvx\": \"$REASON\",
-      \"PKSA-xwpn-zs9j-6wy5\": \"$REASON\",
-      \"PKSA-5k7f-wvjj-jrgw\": \"$REASON\",
-      \"PKSA-sjvz-tbbr-vwth\": \"$REASON\",
-      \"PKSA-h8hf-ytnd-5t9q\": \"$REASON\",
-      \"PKSA-wwb1-81rc-pd65\": \"$REASON\",
-      \"PKSA-hgmw-wn4d-hpcy\": \"$REASON\",
-      \"PKSA-kvv6-36cr-fkzb\": \"$REASON\",
-      \"PKSA-n14z-jjjg-g8vd\": \"$REASON\",
-      \"PKSA-3mcc-k66d-pydb\": \"$REASON\",
-      \"PKSA-gw7n-z4yx-7xjt\": \"$REASON\",
-      \"PKSA-dpx1-78wg-1kqs\": \"$REASON\",
-      \"PKSA-21g2-dzjv-sky5\": \"$REASON\",
-      \"PKSA-v3kg-5xkr-pykw\": \"$REASON\",
-      \"PKSA-yhcn-xrg3-68b1\": \"$REASON\",
-      \"PKSA-2wrf-1xmk-1pky\": \"$REASON\",
-      \"PKSA-6319-ffpf-gx66\": \"$REASON\",
-      \"PKSA-n7sg-8f52-pqtf\": \"$REASON\",
-      \"PKSA-8kk8-h2xr-h5nx\": \"$REASON\",
-      \"PKSA-2rbx-bjdx-4d4d\": \"$REASON\"
-    }"
+    for ADVISORY in \
+      PKSA-xwpn-zs9j-6wy5 \
+      PKSA-sf9j-1gs7-xzvx \
+      PKSA-7h5p-prw9-w5nr
+    do
+      composer config audit.ignore --json --merge "{\"$ADVISORY\":\"$REASON\"}"
+    done
+  fi
+
+  if [ "$PHP_VERSION" = "7.4" ] || [ "$PHP_VERSION" = "8.0" ]; then
+    REASON="The affected version of 3rd party component is installed on PHP ${PHP_VERSION}. There'\''s no alternative supporting PHP ${PHP_VERSION}. Consider upgrading to PHP 8.1+"
+
+    for ADVISORY in \
+      PKSA-5k7f-wvjj-jrgw \
+      PKSA-sjvz-tbbr-vwth \
+      PKSA-h8hf-ytnd-5t9q \
+      PKSA-wwb1-81rc-pd65 \
+      PKSA-hgmw-wn4d-hpcy \
+      PKSA-kvv6-36cr-fkzb \
+      PKSA-n14z-jjjg-g8vd \
+      PKSA-3mcc-k66d-pydb \
+      PKSA-gw7n-z4yx-7xjt \
+      PKSA-dpx1-78wg-1kqs \
+      PKSA-21g2-dzjv-sky5 \
+      PKSA-v3kg-5xkr-pykw \
+      PKSA-yhcn-xrg3-68b1 \
+      PKSA-2wrf-1xmk-1pky \
+      PKSA-6319-ffpf-gx66 \
+      PKSA-n7sg-8f52-pqtf \
+      PKSA-8kk8-h2xr-h5nx \
+      PKSA-2rbx-bjdx-4d4d \
+      PKSA-fs5b-x5k4-1h39
+    do
+      composer config audit.ignore --json --merge "{\"$ADVISORY\":\"$REASON\"}"
+    done
   fi
 '
 
