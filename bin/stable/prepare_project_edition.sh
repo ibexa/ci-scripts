@@ -129,6 +129,7 @@ else
       docker exec install_dependencies composer require ibexa/connector-gemini:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
       docker exec install_dependencies composer require ibexa/integrated-help:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
       docker exec install_dependencies composer require ibexa/connector-raptor:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
+      docker exec install_dependencies composer require ibexa/translations-management:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
 
       if [[ "${INSTALL_CONNECTOR_QUABLE:-false}" == "true" ]]; then
         docker exec install_dependencies composer require ibexa/connector-quable:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
