@@ -11,6 +11,8 @@ add_composer_audit_ignore_config() {
         for advisory in "$@"; do
           composer config audit.ignore --json --merge "{\"$advisory\":\"$reason\"}"
         done
+
+        return $?
       }
 
       PHP74_ADVISORIES=(
@@ -60,4 +62,6 @@ add_composer_audit_ignore_config() {
           "${PHP74_PHP80_ADVISORIES[@]}"
       fi
     '
+
+    return $?
 }
