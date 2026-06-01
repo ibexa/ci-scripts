@@ -39,6 +39,11 @@ add_composer_audit_ignore_config() {
         PKSA-8kk8-h2xr-h5nx
         PKSA-2rbx-bjdx-4d4d
         PKSA-fs5b-x5k4-1h39
+        PKSA-fbvq-z33h-r2np
+        PKSA-g9zw-qxh8-pq8w
+        PKSA-yd6k-t2gh-1m43
+        PKSA-1tmc-rt7x-12w6
+        PKSA-xx6c-6d96-db2w
       )
 
       PHP_VERSION="$(php -r "echo PHP_MAJOR_VERSION . \".\" . PHP_MINOR_VERSION;")"
