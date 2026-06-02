@@ -21,7 +21,7 @@ add_composer_audit_ignore_config() {
         PKSA-7h5p-prw9-w5nr
       )
 
-      PHP74_PHP80_ADVISORIES=(
+      PHP7X_PHP80_ADVISORIES=(
         PKSA-5k7f-wvjj-jrgw
         PKSA-sjvz-tbbr-vwth
         PKSA-h8hf-ytnd-5t9q
@@ -56,10 +56,10 @@ add_composer_audit_ignore_config() {
           "${PHP74_ADVISORIES[@]}"
       fi
 
-      if [ "$PHP_VERSION" = "7.4" ] || [ "$PHP_VERSION" = "8.0" ]; then
+      if [ "$PHP_VERSION" = "7.3" ] || [ "$PHP_VERSION" = "7.4" ] || [ "$PHP_VERSION" = "8.0" ]; then
         add_audit_ignores \
           "The affected version of 3rd party component is installed on PHP ${PHP_VERSION}. There is no alternative supporting PHP ${PHP_VERSION}. Consider upgrading to PHP 8.1+" \
-          "${PHP74_PHP80_ADVISORIES[@]}"
+          "${PHP7X_PHP80_ADVISORIES[@]}"
       fi
     '
 
