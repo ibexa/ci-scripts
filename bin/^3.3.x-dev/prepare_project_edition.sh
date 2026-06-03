@@ -110,6 +110,13 @@ if [ -f ${DEPENDENCY_PACKAGE_DIR}/dependencies.json ]; then
     fi
 fi
 
+# Configure composer audit for unresolvable advisories
+echo "> Adding composer audit.ignore script, if applies"
+curl -L "https://raw.githubusercontent.com/ibexa/ci-scripts/main/bin/_common/composer_audit_ignore.sh" > composer_audit_ignore.sh
+source ./composer_audit_ignore.sh
+
+add_composer_audit_ignore_config
+
 docker exec install_dependencies composer update --ansi
 
 # Move dependency to directory available for docker volume
