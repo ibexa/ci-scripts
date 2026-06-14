@@ -97,6 +97,9 @@ JSON_STRING=$( jq -n \
                   --arg packageDir "./$DEPENDENCY_PACKAGE_NAME" \
                   '{"type": "path", "url": $packageDir, "options": { "symlink": false , "versions": { ($packageName): $packageVersion}}}' )
 
+# IBX-11917 - debugging for Upsun Support, outputs runner IP
+echo "Runner debugging for Upsun: $(curl -s ifconfig.me)"
+# end of IBX-11917 debug
 composer config repositories.localDependency "$JSON_STRING"
 composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_VERSION" --no-update
 
