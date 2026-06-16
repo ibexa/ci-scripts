@@ -12,8 +12,8 @@
         "symfony/property-access": "^5.2",
         "czproject/git-php": "^4.0.3",
         "knplabs/github-api": "^3.0",
-        "php-http/guzzle6-adapter": "^2.0",
-        "guzzlehttp/guzzle": "^6.5",
+        "php-http/guzzle7-adapter": "^1.1",
+        "guzzlehttp/guzzle": "^7.10",
         "symfony/filesystem": "^5.0",
         "http-interop/http-factory-guzzle": "^1.0"
     },
