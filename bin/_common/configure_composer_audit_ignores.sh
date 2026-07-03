@@ -12,6 +12,8 @@ add_audit_ignores() {
     for advisory in "$@"; do
         composer config audit.ignore --json --merge "{\"${advisory}\":\"${reason}\"}"
     done
+
+    return 0
 }
 
 PHP74_ADVISORIES=(
@@ -52,13 +54,13 @@ PHP_VERSION_INPUT=${1:-$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSIO
 IFS=. read -r PHP_MAJOR_VERSION PHP_MINOR_VERSION _ <<< "$PHP_VERSION_INPUT"
 PHP_VERSION=${PHP_MAJOR_VERSION}.${PHP_MINOR_VERSION}
 
-if [ "$PHP_VERSION" = "7.4" ]; then
+if [[ "$PHP_VERSION" = "7.4" ]]; then
     add_audit_ignores \
         "The affected version of 3rd party component is installed on PHP 7.4. There is no alternative supporting PHP 7.4. Consider upgrading to PHP 8.1+" \
         "${PHP74_ADVISORIES[@]}"
 fi
 
-if [ "$PHP_VERSION" = "7.3" ] || [ "$PHP_VERSION" = "7.4" ] || [ "$PHP_VERSION" = "8.0" ]; then
+if [[ "$PHP_VERSION" = "7.3" ]] || [[ "$PHP_VERSION" = "7.4" ]] || [[ "$PHP_VERSION" = "8.0" ]]; then
     add_audit_ignores \
         "The affected version of 3rd party component is installed on PHP ${PHP_VERSION}. There is no alternative supporting PHP ${PHP_VERSION}. Consider upgrading to PHP 8.1+" \
         "${PHP7X_PHP80_ADVISORIES[@]}"
