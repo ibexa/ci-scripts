@@ -48,7 +48,8 @@
         "check-cs": "@fix-cs --dry-run",
         "test": [
             "phpunit -c phpunit.xml",
-            "tests/bin/configure_composer_audit_ignores_test.sh"
+            "tests/bin/configure_composer_audit_ignores_test.sh",
+            "tests/bin/composer_audit_ignore_ref_test.sh"
         ]
     },
     "config": {
