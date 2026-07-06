@@ -7,6 +7,8 @@ PROJECT_BUILD_DIR=${HOME}/build/project
 export COMPOSE_FILE=$3
 export PHP_IMAGE=${4-ghcr.io/ibexa/docker/php:8.3-node18}
 export COMPOSER_MAX_PARALLEL_HTTP=6 # Reduce Composer parallelism to work around Github Actions network errors
+# Git ref of ibexa/ci-scripts used for nested script fetches; defaults to main
+export CI_SCRIPTS_REF="${CI_SCRIPTS_REF:-main}"
 
 DEPENDENCY_PACKAGE_DIR=$(pwd)
 
@@ -24,6 +26,7 @@ docker run --name install_dependencies -d \
 -e COMPOSER_MAX_PARALLEL_HTTP \
 -e PHP_INI_ENV_memory_limit -e COMPOSER_MEMORY_LIMIT \
 -e COMPOSER_NO_INTERACTION=1 \
+-e CI_SCRIPTS_REF \
 ${PHP_IMAGE}
 
 echo "> Setting up skeleton"
@@ -40,7 +43,7 @@ if [[ $PHP_IMAGE == *"8.3"* ]]; then
 else
     # Configure composer audit for unresolvable advisories
     echo "> Adding composer audit.ignore script, if applies"
-    curl -L "https://raw.githubusercontent.com/ibexa/ci-scripts/main/bin/_common/composer_audit_ignore.sh" > composer_audit_ignore.sh
+    curl -L "https://raw.githubusercontent.com/ibexa/ci-scripts/${CI_SCRIPTS_REF}/bin/_common/composer_audit_ignore.sh" > composer_audit_ignore.sh
     source ./composer_audit_ignore.sh
 
     add_composer_audit_ignore_config
