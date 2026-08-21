@@ -151,13 +151,14 @@ if [ -f dependencies.json ]; then
     done
 fi
 
+echo "> Display composer.json for debugging"
+cat composer.json
+
+echo "> Performing composer update --no-scripts"
 docker exec install_dependencies composer update --no-scripts
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
 sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/bundles.php
-
-echo "> Display composer.json for debugging"
-cat composer.json
 
 # Create a default Behat configuration file
 cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
