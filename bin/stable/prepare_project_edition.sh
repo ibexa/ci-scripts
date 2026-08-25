@@ -118,9 +118,9 @@ docker compose --env-file=.env exec -T app sh -c 'chown -R www-data:www-data /va
 docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cache/*"
 echo '> Clear cache & generate assets'
 if [[ $PROJECT_VERSION == *"v5.0"* ]]; then
-    docker compose --env-file=.env exec -T --user www-data app sh -c "NODE_OPTIONS='--max-old-space-size=3072' composer run post-install-cmd --ansi"
+    docker compose --env-file=.env exec -T --user www-data -e APP_ENV=prod app sh -c "NODE_OPTIONS='--max-old-space-size=3072' composer run post-install-cmd --ansi"
 else
-    docker compose --env-file=.env exec -T --user www-data app sh -c "composer run post-install-cmd --ansi"
+    docker compose --env-file=.env exec -T --user www-data -e APP_ENV=prod app sh -c "composer run post-install-cmd --ansi"
 fi
 
 echo '> Install data'
