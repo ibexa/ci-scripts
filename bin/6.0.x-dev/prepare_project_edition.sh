@@ -79,7 +79,7 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
         if [[ "$PROJECT_EDITION" == "$EDITION" ]]; then
             break
         fi
-        COMPOSER_JSON_CONTENT=$(curl -s "https://raw.githubusercontent.com/ibexa/$EDITION/master/composer.json")
+        COMPOSER_JSON_CONTENT=$(curl -s "https://raw.githubusercontent.com/ibexa/$EDITION/6.0/composer.json")
         EDITION_PACKAGES=$(echo "$COMPOSER_JSON_CONTENT" | \
             jq -r --arg projectEdition "ibexa/$PROJECT_EDITION" \
             '.require | with_entries(select(.key | contains("ibexa/"))) | with_entries(select(.key == $projectEdition | not )) | keys')
