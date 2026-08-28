@@ -160,7 +160,11 @@ echo "> Display composer.json for debugging"
 cat composer.json
 
 # Create a default Behat configuration file
-cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
+if [ -f "behat_ibexa_${PROJECT_EDITION}.php" ]; then
+    cp "behat_ibexa_${PROJECT_EDITION}.php" behat.php
+else
+    cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
+fi
 
 # Depenencies are installed and container can be removed
 docker container stop install_dependencies
