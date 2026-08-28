@@ -206,7 +206,7 @@ fi
 if [[ "$COMPOSE_FILE" == *"redis"*.yml ]]; then
     echo '> Display SPI (Redis) version for debugging'
     docker exec ibexa-redis-1 sh -c "redis-cli --version"
-elif [[ "$COMPOSE_FILE" == *"valkey"*.yml ]] then
+elif [[ "$COMPOSE_FILE" == *"valkey"*.yml ]]; then
     echo '> Display SPI (Valkey) version for debugging'
     docker exec valkey sh -c "valkey-cli --version"
 fi
