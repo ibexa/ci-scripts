@@ -165,6 +165,9 @@ if [ -f "behat_ibexa_${PROJECT_EDITION}.php" ]; then
 else
     cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
 fi
+echo '> Behat configuration files in the project root (debug)'
+ls -la behat* config/behat* 2>/dev/null || true
+head -n 12 behat.php 2>/dev/null || true
 
 # Depenencies are installed and container can be removed
 docker container stop install_dependencies
