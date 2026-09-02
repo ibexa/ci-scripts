@@ -181,7 +181,9 @@ docker compose --env-file=.env exec -T app sh -c 'chown -R www-data:www-data /va
 # Rebuild container
 docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cache/*"
 echo '> Clear cache & generate assets'
-docker compose --env-file=.env exec -T --user www-data -e APP_ENV=prod app sh -c "NODE_OPTIONS='--max-old-space-size=3072' composer run post-install-cmd --ansi"
+docker compose --env-file=.env exec -T --user www-data app sh -c "NODE_OPTIONS='--max-old-space-size=3072' composer run post-install-cmd --ansi"
+echo '> Rebuild assets in production mode'
+docker compose --env-file=.env exec -T --user www-data app sh -c "NODE_OPTIONS='--max-old-space-size=3072' yarn encore prod --config-name app && NODE_OPTIONS='--max-old-space-size=3072' yarn encore prod"
 
 echo '> Install data'
 if [[ "$COMPOSE_FILE" == *"elastic"*.yml ]]; then
