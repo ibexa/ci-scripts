@@ -101,7 +101,11 @@ fi
 sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/bundles.php
 
 # Create a default Behat configuration file
-cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
+if [ -f "behat_ibexa_${PROJECT_EDITION}.php" ]; then
+    cp "behat_ibexa_${PROJECT_EDITION}.php" behat.php
+else
+    cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
+fi
 
 # Depenencies are installed and container can be removed
 docker container stop install_dependencies
@@ -142,7 +146,7 @@ fi
 if [[ "$COMPOSE_FILE" == *"redis"*.yml ]]; then
     echo '> Display SPI (Redis) version for debugging'
     docker exec ibexa-redis-1 sh -c "redis-cli --version"
-elif [[ "$COMPOSE_FILE" == *"valkey"*.yml ]] then
+elif [[ "$COMPOSE_FILE" == *"valkey"*.yml ]]; then
     echo '> Display SPI (Valkey) version for debugging'
     docker exec valkey sh -c "valkey-cli --version"
 fi
