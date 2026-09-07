@@ -160,9 +160,6 @@ echo "> Display composer.json for debugging"
 cat composer.json
 
 # Create a default Behat configuration file
-# Remove Behat configuration files added by recipes (e.g. behat.yml.dist from friends-of-behat/symfony-extension),
-# they take precedence over behat.php in Behat's configuration discovery
-rm -f behat.yaml behat.yml behat.yaml.dist behat.yml.dist behat.dist.yaml behat.dist.yml behat.php behat.dist.php
 if [ -f "behat_ibexa_${PROJECT_EDITION}.php" ]; then
     cp "behat_ibexa_${PROJECT_EDITION}.php" behat.php
 else
