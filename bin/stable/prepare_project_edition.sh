@@ -126,6 +126,12 @@ if [[ $PROJECT_VERSION == *"v5.0"* ]]; then
 else
     docker compose --env-file=.env exec -T --user www-data app sh -c "composer run post-install-cmd --ansi"
 fi
+echo '> Rebuild assets in production mode'
+if [[ $PROJECT_VERSION == *"v5.0"* ]]; then
+    docker compose --env-file=.env exec -T --user www-data app sh -c "NODE_OPTIONS='--max-old-space-size=3072' yarn encore prod --config-name app && NODE_OPTIONS='--max-old-space-size=3072' yarn encore prod"
+else
+    docker compose --env-file=.env exec -T --user www-data app sh -c "yarn encore prod --config-name app && yarn encore prod"
+fi
 
 echo '> Install data'
 if [[ "$COMPOSE_FILE" == *"elastic"*.yml ]]; then
