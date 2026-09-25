@@ -150,6 +150,11 @@ if [ -f dependencies.json ]; then
     done
 fi
 
+# The elasticsearch/elasticsearch client must match the server major: an Elasticsearch 8 server rejects client 9 requests
+if [[ "$COMPOSE_FILE" == *"elastic8.yml"* ]]; then
+  docker exec install_dependencies composer require "elasticsearch/elasticsearch:^8.19" --no-update --no-scripts --ansi
+fi
+
 docker exec install_dependencies composer update --no-scripts
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
