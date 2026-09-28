@@ -42,6 +42,11 @@ ${PHP_IMAGE}
 echo "> Setting up website skeleton"
 composer create-project ibexa/website-skeleton:$PROJECT_VERSION . --no-install --ansi
 
+if [[ -n "${SYMFONY_VERSION}" ]]; then
+    echo "> Forcing Symfony ${SYMFONY_VERSION}"
+    composer config extra.symfony.require "${SYMFONY_VERSION}.*"
+fi
+
 # Add other dependencies if required
 if [ -f ${DEPENDENCY_PACKAGE_DIR}/dependencies.json ]; then
     cp ${DEPENDENCY_PACKAGE_DIR}/dependencies.json .
