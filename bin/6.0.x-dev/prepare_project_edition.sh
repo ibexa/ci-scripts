@@ -185,6 +185,13 @@ fi
 if [[ -n "${SYMFONY_VERSION}" ]]; then
     echo "> Forcing Symfony ${SYMFONY_VERSION}"
     composer config extra.symfony.require "${SYMFONY_VERSION}.*"
+    # Flex pinned the root symfony/* requirements to the previous "X.Y.*" when they were installed
+    jq --arg v "${SYMFONY_VERSION}.*" '
+        (.require, .["require-dev"]) |= (if . == null then . else with_entries(
+            if (.key | startswith("symfony/")) and (.value | test("^[0-9]+\\.[0-9]+\\.\\*$")) then .value = $v else . end
+        ) end)
+    ' composer.json > composer.json.new
+    mv composer.json.new composer.json
 fi
 
 VERSIONS_BEFORE=$(mktemp)
@@ -204,6 +211,20 @@ for PACKAGE in $OUTDATED_RECIPES; do
     fi
 done
 allow_behat_env
+
+if [[ -n "${SYMFONY_VERSION}" ]]; then
+    # Every component of the matching symfony/symfony release must be on that version (a half-upgraded tree proves nothing)
+    COMPONENTS=$(curl -fsSL --proto '=https' https://repo.packagist.org/p2/symfony/symfony.json | jq -c --arg v "${SYMFONY_VERSION}." '
+        [.packages["symfony/symfony"][] | select((.version | ltrimstr("v") | startswith($v)) and (.version | contains("-") | not))]
+        | first | .replace // {} | keys | map(select((contains("-contracts") or startswith("symfony/polyfill")) | not))')
+    NOT_FORCED=$(docker exec install_dependencies composer show --locked --format=json | jq -r --argjson components "$COMPONENTS" --arg v "${SYMFONY_VERSION}." '
+        .locked[] | select(.name as $name | $components | index($name)) | select(.version | ltrimstr("v") | startswith($v) | not) | "\(.name) \(.version)"')
+    if [[ "$COMPONENTS" == "[]" || -n "$NOT_FORCED" ]]; then
+        echo "Symfony ${SYMFONY_VERSION} was requested, but these components stayed on another version (or none were found):" >&2
+        echo "$NOT_FORCED" >&2
+        exit 1
+    fi
+fi
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
 sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/bundles.php
