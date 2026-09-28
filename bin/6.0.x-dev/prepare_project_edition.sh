@@ -207,7 +207,7 @@ for PACKAGE in $OUTDATED_RECIPES; do
     if grep -qxF "$PACKAGE" <<< "$CHANGED_PACKAGES"; then
         echo "> Updating the recipe of ${PACKAGE}"
         commit_project "Before updating the ${PACKAGE} recipe"
-        docker exec install_dependencies composer recipes:update "$PACKAGE" --ansi
+        docker exec install_dependencies composer recipes:update "$PACKAGE" --no-changelog --ansi
     fi
 done
 allow_behat_env
