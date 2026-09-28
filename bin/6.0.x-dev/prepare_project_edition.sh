@@ -187,9 +187,9 @@ if [[ -n "${SYMFONY_VERSION}" ]]; then
     composer config extra.symfony.require "${SYMFONY_VERSION}.*"
     # Flex pinned the root symfony/* requirements to the previous "X.Y.*" when they were installed
     jq --arg v "${SYMFONY_VERSION}.*" '
-        (.require, .["require-dev"]) |= (if . == null then . else with_entries(
+        reduce ("require", "require-dev") as $section (.; if has($section) then .[$section] |= with_entries(
             if (.key | startswith("symfony/")) and (.value | test("^[0-9]+\\.[0-9]+\\.\\*$")) then .value = $v else . end
-        ) end)
+        ) else . end)
     ' composer.json > composer.json.new
     mv composer.json.new composer.json
 fi
