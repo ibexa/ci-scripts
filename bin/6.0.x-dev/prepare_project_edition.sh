@@ -8,6 +8,33 @@ export COMPOSE_FILE=$3
 export PHP_IMAGE=${4-ghcr.io/ibexa/docker/php:8.3-node18}
 export COMPOSER_MAX_PARALLEL_HTTP=6 # Reduce Composer parallelism to work around Github Actions network errors
 
+# Symfony 8.1's framework-bundle recipe ships a Kernel that only allows the prod, dev and test environments;
+# the project runs in "behat" here, so add it (no-op for Kernels without getAllowedEnvs()).
+allow_behat_env() {
+    docker exec install_dependencies php -r '
+        $file = "src/Kernel.php";
+        $code = is_file($file) ? file_get_contents($file) : "";
+        if (!str_contains($code, "getAllowedEnvs") || str_contains($code, "\x27behat\x27")) {
+            exit(0);
+        }
+        $code = preg_replace("/(function getAllowedEnvs\(\): array\s*\{\s*return \[)([^\]]*)\]/", "\$1\$2, \x27behat\x27]", $code, 1, $count);
+        if ($count !== 1) {
+            fwrite(STDERR, "Could not add the behat environment to $file\n");
+            exit(1);
+        }
+        file_put_contents($file, $code);
+        echo "> Added the behat environment to $file\n";
+    '
+}
+
+installed_versions() {
+    docker exec install_dependencies composer show --locked --format=json | jq -r '.locked[] | "\(.name) \(.version)"' | sort
+}
+
+commit_project() {
+    docker exec install_dependencies sh -c "git add -A && git -c user.name=CI -c user.email=ci@ibexa.co commit --quiet --allow-empty -m '$1'"
+}
+
 if [[ -n "${DOCKER_PASSWORD}" ]]; then
     echo "> Set up Docker credentials"
     echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
@@ -54,7 +81,10 @@ if [ -f ${DEPENDENCY_PACKAGE_DIR}/dependencies.json ]; then
     fi
 fi
 
-docker exec install_dependencies composer update --ansi
+# Scripts run after the Kernel is allowed to boot in the behat environment
+docker exec install_dependencies composer update --no-scripts --ansi
+allow_behat_env
+docker exec install_dependencies composer run-script post-update-cmd --ansi
 
 # Move dependency to directory available for docker volume
 echo "> Move ${DEPENDENCY_PACKAGE_DIR} to ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}"
@@ -79,7 +109,7 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
         if [[ "$PROJECT_EDITION" == "$EDITION" ]]; then
             break
         fi
-        COMPOSER_JSON_CONTENT=$(curl -s "https://raw.githubusercontent.com/ibexa/$EDITION/master/composer.json")
+        COMPOSER_JSON_CONTENT=$(curl -s "https://raw.githubusercontent.com/ibexa/$EDITION/${PROJECT_VERSION%.x-dev}/composer.json")
         EDITION_PACKAGES=$(echo "$COMPOSER_JSON_CONTENT" | \
             jq -r --arg projectEdition "ibexa/$PROJECT_EDITION" \
             '.require | with_entries(select(.key | contains("ibexa/"))) | with_entries(select(.key == $projectEdition | not )) | keys')
@@ -150,11 +180,56 @@ if [ -f dependencies.json ]; then
     done
 fi
 
+# Forced only now: the edition and its 6.0 siblings required above may not allow that Symfony version
+# until dependencies.json replaced them. Recipes of the upgraded Symfony packages are updated below.
+if [[ -n "${SYMFONY_VERSION}" ]]; then
+    echo "> Forcing Symfony ${SYMFONY_VERSION}"
+    composer config extra.symfony.require "${SYMFONY_VERSION}.*"
+    # Flex pinned the root symfony/* requirements to the previous "X.Y.*" when they were installed
+    jq --arg v "${SYMFONY_VERSION}.*" '
+        reduce ("require", "require-dev") as $section (.; if has($section) then .[$section] |= with_entries(
+            if (.key | startswith("symfony/")) and (.value | test("^[0-9]+\\.[0-9]+\\.\\*$")) then .value = $v else . end
+        ) else . end)
+    ' composer.json > composer.json.new
+    mv composer.json.new composer.json
+fi
+
+VERSIONS_BEFORE=$(mktemp)
+installed_versions > "$VERSIONS_BEFORE"
+
 echo "> Display composer.json for debugging"
 cat composer.json
 
 echo "> Performing composer update --no-scripts"
 docker exec install_dependencies composer update --no-scripts
+
+# Packages moved to another version by the update above (e.g. a new major pulled in by dependencies.json)
+# keep the configuration of their previous recipe; upgrade those recipes like a project would.
+CHANGED_PACKAGES=$(comm -13 "$VERSIONS_BEFORE" <(installed_versions) | cut -d' ' -f1)
+rm "$VERSIONS_BEFORE"
+OUTDATED_RECIPES=$(docker exec install_dependencies composer recipes --outdated --no-ansi | sed -n 's/^ \* \([^ ]*\) (update available)$/\1/p')
+for PACKAGE in $OUTDATED_RECIPES; do
+    if grep -qxF "$PACKAGE" <<< "$CHANGED_PACKAGES"; then
+        echo "> Updating the recipe of ${PACKAGE}"
+        commit_project "Before updating the ${PACKAGE} recipe"
+        docker exec install_dependencies composer recipes:update "$PACKAGE" --no-changelog --ansi
+    fi
+done
+allow_behat_env
+
+if [[ -n "${SYMFONY_VERSION}" ]]; then
+    # Every component of the matching symfony/symfony release must be on that version (a half-upgraded tree proves nothing)
+    COMPONENTS=$(curl -fsSL --proto '=https' https://repo.packagist.org/p2/symfony/symfony.json | jq -c --arg v "${SYMFONY_VERSION}." '
+        [.packages["symfony/symfony"][] | select((.version | ltrimstr("v") | startswith($v)) and (.version | contains("-") | not))]
+        | first | .replace // {} | keys | map(select((contains("-contracts") or startswith("symfony/polyfill")) | not))')
+    NOT_FORCED=$(docker exec install_dependencies composer show --locked --format=json | jq -r --argjson components "$COMPONENTS" --arg v "${SYMFONY_VERSION}." '
+        .locked[] | select(.name as $name | $components | index($name)) | select(.version | ltrimstr("v") | startswith($v) | not) | "\(.name) \(.version)"')
+    if [[ "$COMPONENTS" == "[]" || -n "$NOT_FORCED" ]]; then
+        echo "Symfony ${SYMFONY_VERSION} was requested, but these components stayed on another version (or none were found):" >&2
+        echo "$NOT_FORCED" >&2
+        exit 1
+    fi
+fi
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
 sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/bundles.php
