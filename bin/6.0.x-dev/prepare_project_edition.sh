@@ -35,6 +35,20 @@ commit_project() {
     docker exec install_dependencies sh -c "git add -A && git -c user.name=CI -c user.email=ci@ibexa.co commit --quiet --allow-empty -m '$1'"
 }
 
+force_symfony_version() {
+    if [[ -n "${SYMFONY_VERSION}" ]]; then
+        echo "> Forcing Symfony ${SYMFONY_VERSION}"
+        composer config extra.symfony.require "${SYMFONY_VERSION}.*"
+        # Flex pinned the root symfony/* requirements to the previous "X.Y.*" when they were installed
+        jq --arg v "${SYMFONY_VERSION}.*" '
+            reduce ("require", "require-dev") as $section (.; if has($section) then .[$section] |= with_entries(
+                if (.key | startswith("symfony/")) and (.value | test("^[0-9]+\\.[0-9]+\\.\\*$")) then .value = $v else . end
+            ) else . end)
+        ' composer.json > composer.json.new
+        mv composer.json.new composer.json
+    fi
+}
+
 if [[ -n "${DOCKER_PASSWORD}" ]]; then
     echo "> Set up Docker credentials"
     echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
@@ -133,6 +147,26 @@ echo "Runner debugging for Upsun: $(curl -s ifconfig.me)"
 composer config repositories.localDependency "$JSON_STRING"
 composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_VERSION" --no-update
 
+# Add other dependencies if required
+if [ -f dependencies.json ]; then
+    COUNT=$(cat dependencies.json | jq '.packages | length' )
+    for ((i=0;i<$COUNT;i++)); do
+        REPO_URL=$(cat dependencies.json | jq -r .packages[$i].repositoryUrl)
+        PACKAGE_NAME=$(cat dependencies.json | jq -r .packages[$i].package)
+        REQUIREMENT=$(cat dependencies.json | jq -r .packages[$i].requirement)
+        SHOULD_BE_ADDED_AS_VCS=$(cat dependencies.json | jq -r .packages[$i].shouldBeAddedAsVCS)
+        if [[ $SHOULD_BE_ADDED_AS_VCS == "true" ]] ; then
+            echo ">> Private or fork repository detected, adding VCS to Composer repositories"
+            docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
+        fi
+        jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
+        mv composer.json.new composer.json
+    done
+fi
+
+# Forced before the edition is resolved: the tested package and its pinned siblings may allow only that Symfony version
+force_symfony_version
+
 # Install correct product variant
 docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
 
@@ -163,36 +197,8 @@ if [[ "$PROJECT_EDITION" == "commerce" ]]; then
   docker exec install_dependencies composer require ibexa/shopping-list:$PROJECT_VERSION --no-scripts --ansi --no-update
 fi
 
-# Add other dependencies if required
-if [ -f dependencies.json ]; then
-    COUNT=$(cat dependencies.json | jq '.packages | length' )
-    for ((i=0;i<$COUNT;i++)); do
-        REPO_URL=$(cat dependencies.json | jq -r .packages[$i].repositoryUrl)
-        PACKAGE_NAME=$(cat dependencies.json | jq -r .packages[$i].package)
-        REQUIREMENT=$(cat dependencies.json | jq -r .packages[$i].requirement)
-        SHOULD_BE_ADDED_AS_VCS=$(cat dependencies.json | jq -r .packages[$i].shouldBeAddedAsVCS)
-        if [[ $SHOULD_BE_ADDED_AS_VCS == "true" ]] ; then
-            echo ">> Private or fork repository detected, adding VCS to Composer repositories"
-            docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
-        fi
-        jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
-        mv composer.json.new composer.json
-    done
-fi
-
-# Forced only now: the edition and its 6.0 siblings required above may not allow that Symfony version
-# until dependencies.json replaced them. Recipes of the upgraded Symfony packages are updated below.
-if [[ -n "${SYMFONY_VERSION}" ]]; then
-    echo "> Forcing Symfony ${SYMFONY_VERSION}"
-    composer config extra.symfony.require "${SYMFONY_VERSION}.*"
-    # Flex pinned the root symfony/* requirements to the previous "X.Y.*" when they were installed
-    jq --arg v "${SYMFONY_VERSION}.*" '
-        reduce ("require", "require-dev") as $section (.; if has($section) then .[$section] |= with_entries(
-            if (.key | startswith("symfony/")) and (.value | test("^[0-9]+\\.[0-9]+\\.\\*$")) then .value = $v else . end
-        ) else . end)
-    ' composer.json > composer.json.new
-    mv composer.json.new composer.json
-fi
+# Again after the opt-in packages above, Flex pins their root symfony/* requirements to the restricted version
+force_symfony_version
 
 VERSIONS_BEFORE=$(mktemp)
 installed_versions > "$VERSIONS_BEFORE"
