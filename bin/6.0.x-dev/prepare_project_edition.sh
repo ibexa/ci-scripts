@@ -155,6 +155,11 @@ if [ -f dependencies.json ]; then
         PACKAGE_NAME=$(cat dependencies.json | jq -r .packages[$i].package)
         REQUIREMENT=$(cat dependencies.json | jq -r .packages[$i].requirement)
         SHOULD_BE_ADDED_AS_VCS=$(cat dependencies.json | jq -r .packages[$i].shouldBeAddedAsVCS)
+        # Optional "editions" list: pin only when building one of these editions
+        if ! jq -e --arg edition "$PROJECT_EDITION" ".packages[$i] | (has(\"editions\") | not) or (.editions | index(\$edition) != null)" dependencies.json >/dev/null; then
+            echo ">> Skipping $PACKAGE_NAME, not pinned for the $PROJECT_EDITION edition"
+            continue
+        fi
         if [[ $SHOULD_BE_ADDED_AS_VCS == "true" ]] ; then
             echo ">> Private or fork repository detected, adding VCS to Composer repositories"
             docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
