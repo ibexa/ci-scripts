@@ -173,7 +173,13 @@ fi
 force_symfony_version
 
 # Install correct product variant
-docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
+if [[ -n "${SYMFONY_VERSION}" ]]; then
+    # The root symfony/* requirements were just moved to the forced version, a partial update would keep them locked
+    docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} --no-update --no-scripts --ansi
+    docker exec install_dependencies composer update -W --no-scripts --ansi
+else
+    docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
+fi
 
 # Init a repository to avoid Composer asking questions
 docker exec install_dependencies git config --global --add safe.directory /var/www && git init && git add .
