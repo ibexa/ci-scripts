@@ -160,6 +160,11 @@ if [ -f dependencies.json ]; then
             echo ">> Skipping $PACKAGE_NAME, not pinned for the $PROJECT_EDITION edition"
             continue
         fi
+        # "optIn": true pins are required only when the opt-in package is installed, see require_opt_in
+        if jq -e ".packages[$i].optIn == true" dependencies.json >/dev/null; then
+            echo ">> Leaving $PACKAGE_NAME to the opt-in packages"
+            continue
+        fi
         if [[ $SHOULD_BE_ADDED_AS_VCS == "true" ]] ; then
             echo ">> Private or fork repository detected, adding VCS to Composer repositories"
             docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
@@ -191,21 +196,30 @@ docker exec install_dependencies composer recipes:install ${DEPENDENCY_PACKAGE_N
 # Install Behat and Docker packages
 docker exec install_dependencies composer require ibexa/behat:$PROJECT_VERSION ibexa/docker:$PROJECT_VERSION --no-scripts --ansi --no-update
 
+# An opt-in package pinned in dependencies.json is required with its pinned requirement, so the pin survives
+require_opt_in() {
+    local requirement=""
+    if [ -f dependencies.json ]; then
+        requirement=$(jq -r --arg p "$1" '[.packages[] | select(.package == $p) | .requirement][0] // empty' dependencies.json)
+    fi
+    docker exec install_dependencies composer require "$1:${requirement:-$PROJECT_VERSION}" --no-scripts --ansi --no-update
+}
+
 # Install opt-in packages
 if [[ "$PROJECT_EDITION" != "oss" ]]; then
-  docker exec install_dependencies composer require ibexa/connector-anthropic:$PROJECT_VERSION --no-scripts --ansi --no-update
-  docker exec install_dependencies composer require ibexa/connector-gemini:$PROJECT_VERSION --no-scripts --ansi --no-update
-  docker exec install_dependencies composer require ibexa/integrated-help:$PROJECT_VERSION --no-scripts --ansi --no-update
-  docker exec install_dependencies composer require ibexa/connector-raptor:$PROJECT_VERSION --no-scripts --ansi --no-update
-  docker exec install_dependencies composer require ibexa/mcp:$PROJECT_VERSION --no-scripts --ansi --no-update
+  require_opt_in ibexa/connector-anthropic
+  require_opt_in ibexa/connector-gemini
+  require_opt_in ibexa/integrated-help
+  require_opt_in ibexa/connector-raptor
+  require_opt_in ibexa/mcp
 
   if [[ "${INSTALL_CONNECTOR_QUABLE:-false}" == "true" ]]; then
-    docker exec install_dependencies composer require ibexa/connector-quable:$PROJECT_VERSION --no-scripts --ansi --no-update
+    require_opt_in ibexa/connector-quable
   fi
 
 fi
 if [[ "$PROJECT_EDITION" == "commerce" ]]; then
-  docker exec install_dependencies composer require ibexa/shopping-list:$PROJECT_VERSION --no-scripts --ansi --no-update
+  require_opt_in ibexa/shopping-list
 fi
 
 # Again after the opt-in packages above, Flex pins their root symfony/* requirements to the restricted version
