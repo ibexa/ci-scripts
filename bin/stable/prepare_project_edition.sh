@@ -116,7 +116,7 @@ else
     fi  
 fi
 
-if [[ $PROJECT_VERSION == *"v6"* ]]; then
+if [[ $PROJECT_VERSION == *"v6.0"* ]]; then
     allow_behat_env
 fi
 
