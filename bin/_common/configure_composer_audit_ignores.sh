@@ -16,6 +16,10 @@ add_audit_ignores() {
     return 0
 }
 
+ALL_PHP_ADVISORIES=(
+    PKSA-w9tt-7782-78jx
+)
+
 PHP74_ADVISORIES=(
     PKSA-xwpn-zs9j-6wy5
     PKSA-sf9j-1gs7-xzvx
@@ -53,6 +57,10 @@ PHP7X_PHP80_ADVISORIES=(
 PHP_VERSION_INPUT=${1:-$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')}
 IFS=. read -r PHP_MAJOR_VERSION PHP_MINOR_VERSION _ <<< "$PHP_VERSION_INPUT"
 PHP_VERSION=${PHP_MAJOR_VERSION}.${PHP_MINOR_VERSION}
+
+add_audit_ignores \
+    "The affected 3rd party component has no fixed version on the release line required by Ibexa DXP" \
+    "${ALL_PHP_ADVISORIES[@]}"
 
 if [[ "$PHP_VERSION" = "7.4" ]]; then
     add_audit_ignores \
