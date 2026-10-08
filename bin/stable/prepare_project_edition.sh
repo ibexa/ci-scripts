@@ -15,6 +15,25 @@ DEPENDENCY_PACKAGE_DIR=$(pwd)
 echo '> Preparing project containers using the following setup:'
 echo "- PROJECT_BUILD_DIR=${PROJECT_BUILD_DIR}"
 
+# Symfony 8.1 framework-bundle recipe ships a Kernel limiting APP_ENV to getAllowedEnvs(),
+# the project runs in "behat" here, so add it (no-op for Kernels without getAllowedEnvs()).
+allow_behat_env() {
+    docker exec install_dependencies php -r '
+        $file = "src/Kernel.php";
+        $code = is_file($file) ? file_get_contents($file) : "";
+        if (!str_contains($code, "getAllowedEnvs") || str_contains($code, "\x27behat\x27")) {
+            exit(0);
+        }
+        $code = preg_replace("/(function getAllowedEnvs\(\): array\s*\{\s*return \[)([^\]]*)\]/", "\$1\$2, \x27behat\x27]", $code, 1, $count);
+        if ($count !== 1) {
+            fwrite(STDERR, "Could not add the behat environment to $file\n");
+            exit(1);
+        }
+        file_put_contents($file, $code);
+        echo "> Added the behat environment to $file\n";
+    '
+}
+
 # Go to main project dir
 mkdir -p $PROJECT_BUILD_DIR && cd $PROJECT_BUILD_DIR
 
@@ -95,6 +114,10 @@ else
     if [[ "$PROJECT_EDITION" == "commerce" ]]; then
       docker exec install_dependencies composer require ibexa/shopping-list:$PROJECT_VERSION --with-all-dependencies --no-scripts --ansi
     fi  
+fi
+
+if [[ $PROJECT_VERSION == *"v6.0"* ]]; then
+    allow_behat_env
 fi
 
 # Enable FriendsOfBehat SymfonyExtension in the Behat env
