@@ -44,20 +44,26 @@ assert_line_count() {
 }
 
 run_for_version 7.3
-assert_line_count 25
+assert_line_count 26
+grep -q PKSA-w9tt-7782-78jx "$OUTPUT"
 ! grep -q PKSA-xwpn-zs9j-6wy5 "$OUTPUT"
 
 run_for_version 7.4.33
-assert_line_count 28
+assert_line_count 29
 grep -q PKSA-xwpn-zs9j-6wy5 "$OUTPUT"
 grep -q PKSA-8zx5-v2nz-58pb "$OUTPUT"
+grep -q PKSA-w9tt-7782-78jx "$OUTPUT"
 
 run_for_version 8.0
-assert_line_count 25
+assert_line_count 26
 ! grep -q PKSA-xwpn-zs9j-6wy5 "$OUTPUT"
 
 run_for_version 8.1
-assert_line_count 0
+assert_line_count 1
+grep -q PKSA-w9tt-7782-78jx "$OUTPUT"
+
+run_for_version 8.3
+assert_line_count 1
 
 if COMPOSER_CALLS_OUTPUT=$OUTPUT PATH="${TEST_DIR}:${PATH}" COMPOSER_FAILURE=1 bash "$SCRIPT" 7.3; then
     echo 'Expected a Composer failure to be propagated' >&2
