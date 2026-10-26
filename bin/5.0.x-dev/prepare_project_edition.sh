@@ -43,8 +43,8 @@ echo "> Setting up website skeleton"
 composer create-project ibexa/website-skeleton:$PROJECT_VERSION . --no-install --ansi
 
 # Copy auth.json if needed (before the first Composer run, so a private Symfony Flex endpoint can be fetched)
-if [ -f ${DEPENDENCY_PACKAGE_DIR}/auth.json ]; then
-    cp ${DEPENDENCY_PACKAGE_DIR}/auth.json .
+if [[ -f "${DEPENDENCY_PACKAGE_DIR}/auth.json" ]]; then
+    cp "${DEPENDENCY_PACKAGE_DIR}/auth.json" .
 fi
 
 # Add other dependencies if required

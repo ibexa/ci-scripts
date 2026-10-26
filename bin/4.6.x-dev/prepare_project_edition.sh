@@ -53,8 +53,8 @@ source ./composer_audit_ignore.sh
 add_composer_audit_ignore_config
 
 # Copy auth.json if needed (before the first Composer run, so a private Symfony Flex endpoint can be fetched)
-if [ -f ${DEPENDENCY_PACKAGE_DIR}/auth.json ]; then
-    cp ${DEPENDENCY_PACKAGE_DIR}/auth.json .
+if [[ -f "${DEPENDENCY_PACKAGE_DIR}/auth.json" ]]; then
+    cp "${DEPENDENCY_PACKAGE_DIR}/auth.json" .
 fi
 
 # Add other dependencies if required
