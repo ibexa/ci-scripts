@@ -42,6 +42,11 @@ ${PHP_IMAGE}
 echo "> Setting up website skeleton"
 composer create-project ibexa/website-skeleton:$PROJECT_VERSION . --no-install --ansi
 
+# Copy auth.json if needed (before the first Composer run, so a private Symfony Flex endpoint can be fetched)
+if [[ -f "${DEPENDENCY_PACKAGE_DIR}/auth.json" ]]; then
+    cp "${DEPENDENCY_PACKAGE_DIR}/auth.json" .
+fi
+
 # Add other dependencies if required
 if [ -f ${DEPENDENCY_PACKAGE_DIR}/dependencies.json ]; then
     cp ${DEPENDENCY_PACKAGE_DIR}/dependencies.json .
@@ -63,11 +68,6 @@ mv ${DEPENDENCY_PACKAGE_DIR}/* ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}/
 
 # Remove installed dependencies inside the package
 rm -rf ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}/vendor
-
-# Copy auth.json if needed
-if [ -f ./${DEPENDENCY_PACKAGE_NAME}/auth.json ]; then
-    cp ${DEPENDENCY_PACKAGE_NAME}/auth.json .
-fi
 
 if [[ "$PROJECT_EDITION" != "oss" ]]; then
     composer config repositories.ibexa composer https://updates.ibexa.co
