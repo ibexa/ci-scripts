@@ -45,6 +45,27 @@ allow_behat_env() {
     '
 }
 
+# Adds the requirements from dependencies.json to the root composer.json.
+# Pass "with-vcs" to also register the VCS repositories of private or forked packages.
+apply_dependencies_json() {
+    if [ ! -f dependencies.json ]; then
+        return
+    fi
+    COUNT=$(cat dependencies.json | jq '.packages | length' )
+    for ((i=0;i<$COUNT;i++)); do
+        REPO_URL=$(cat dependencies.json | jq -r .packages[$i].repositoryUrl)
+        PACKAGE_NAME=$(cat dependencies.json | jq -r .packages[$i].package)
+        REQUIREMENT=$(cat dependencies.json | jq -r .packages[$i].requirement)
+        SHOULD_BE_ADDED_AS_VCS=$(cat dependencies.json | jq -r .packages[$i].shouldBeAddedAsVCS)
+        if [[ $1 == "with-vcs" && $SHOULD_BE_ADDED_AS_VCS == "true" ]] ; then
+            echo ">> Private or fork repository detected, adding VCS to Composer repositories"
+            docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
+        fi
+        jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
+        mv composer.json.new composer.json
+    done
+}
+
 # Go to main project dir
 mkdir -p $PROJECT_BUILD_DIR && cd $PROJECT_BUILD_DIR
 
@@ -125,6 +146,10 @@ echo "Runner debugging for Upsun: $(curl -s ifconfig.me)"
 composer config repositories.localDependency "$JSON_STRING"
 composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_VERSION" --no-update
 
+# Add other dependencies if required, before the product variant is resolved,
+# so a change spanning several packages can be installed together
+apply_dependencies_json with-vcs
+
 # Install correct product variant
 docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
 
@@ -155,27 +180,13 @@ if [[ "$PROJECT_EDITION" == "commerce" ]]; then
   docker exec install_dependencies composer require ibexa/shopping-list:$PROJECT_VERSION --no-scripts --ansi --no-update
 fi
 
-# Add other dependencies if required
-if [ -f dependencies.json ]; then
-    COUNT=$(cat dependencies.json | jq '.packages | length' )
-    for ((i=0;i<$COUNT;i++)); do
-        REPO_URL=$(cat dependencies.json | jq -r .packages[$i].repositoryUrl)
-        PACKAGE_NAME=$(cat dependencies.json | jq -r .packages[$i].package)
-        REQUIREMENT=$(cat dependencies.json | jq -r .packages[$i].requirement)
-        SHOULD_BE_ADDED_AS_VCS=$(cat dependencies.json | jq -r .packages[$i].shouldBeAddedAsVCS)
-        if [[ $SHOULD_BE_ADDED_AS_VCS == "true" ]] ; then
-            echo ">> Private or fork repository detected, adding VCS to Composer repositories"
-            docker exec install_dependencies composer config repositories.$(uuidgen) vcs "$REPO_URL"
-        fi
-        jq --arg package "$PACKAGE_NAME" --arg requirement "$REQUIREMENT" '.["require"] += { ($package) : ($requirement) }' composer.json > composer.json.new
-        mv composer.json.new composer.json
-    done
-fi
-
 # The elasticsearch/elasticsearch client must match the server major: an Elasticsearch 8 server rejects client 9 requests
 if [[ "$COMPOSE_FILE" == *"elastic8.yml"* ]]; then
   docker exec install_dependencies composer require "elasticsearch/elasticsearch:^8.19" --no-update --no-scripts --ansi
 fi
+
+# Apply the dependencies again, as the requires above overwrite pins of the same packages
+apply_dependencies_json
 
 docker exec install_dependencies composer update --no-scripts
 allow_behat_env
