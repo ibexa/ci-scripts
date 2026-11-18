@@ -123,7 +123,16 @@ JSON_STRING=$( jq -n \
 echo "Runner debugging for Upsun: $(curl -s ifconfig.me)"
 # end of IBX-11917 debug
 composer config repositories.localDependency "$JSON_STRING"
-composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_VERSION" --no-update
+
+# A metapackage can require the "-next" branch of the tested package (the branch carrying its built assets),
+# e.g. "ibexa/connector-ai-assistant": "dev-6.0-next". The local checkout is installed as X.Y.x-dev,
+# so alias it to that branch name as well, otherwise the requirement cannot be resolved.
+DEPENDENCY_PACKAGE_REQUIREMENT="$DEPENDENCY_PACKAGE_VERSION"
+if [[ "$DEPENDENCY_PACKAGE_VERSION" =~ ^[0-9]+\.[0-9]+\.x-dev$ ]]; then
+    DEPENDENCY_PACKAGE_REQUIREMENT="$DEPENDENCY_PACKAGE_VERSION as dev-${DEPENDENCY_PACKAGE_VERSION%.x-dev}-next"
+fi
+
+composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_REQUIREMENT" --no-update
 
 # Install correct product variant
 docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
