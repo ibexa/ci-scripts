@@ -44,18 +44,19 @@ assert_line_count() {
 }
 
 run_for_version 7.3
-assert_line_count 26
+assert_line_count 31
 grep -q PKSA-w9tt-7782-78jx "$OUTPUT"
 ! grep -q PKSA-xwpn-zs9j-6wy5 "$OUTPUT"
 
 run_for_version 7.4.33
-assert_line_count 29
+assert_line_count 34
 grep -q PKSA-xwpn-zs9j-6wy5 "$OUTPUT"
 grep -q PKSA-8zx5-v2nz-58pb "$OUTPUT"
+grep -q PKSA-hjpc-r7p2-zyfx "$OUTPUT"
 grep -q PKSA-w9tt-7782-78jx "$OUTPUT"
 
 run_for_version 8.0
-assert_line_count 26
+assert_line_count 31
 ! grep -q PKSA-xwpn-zs9j-6wy5 "$OUTPUT"
 
 run_for_version 8.1
