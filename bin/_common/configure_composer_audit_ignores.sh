@@ -52,6 +52,11 @@ PHP7X_PHP80_ADVISORIES=(
     PKSA-1tmc-rt7x-12w6
     PKSA-xx6c-6d96-db2w
     PKSA-8zx5-v2nz-58pb
+    PKSA-hs2m-ms65-2zgg
+    PKSA-tfq6-ydd8-dhbf
+    PKSA-v6ry-d7gg-9dnc
+    PKSA-szz8-81wy-3x8z
+    PKSA-hjpc-r7p2-zyfx
 )
 
 PHP_VERSION_INPUT=${1:-$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')}
