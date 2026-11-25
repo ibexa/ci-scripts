@@ -84,6 +84,12 @@ if [ -f ${DEPENDENCY_PACKAGE_DIR}/dependencies.json ]; then
     fi
 fi
 
+# The skeleton of Cohesivo requires the whole product already, and its packages register their Behat contexts in the
+# behat environment: ibexa/behat has to be installed before the first cache:clear, which runs in that environment
+if [[ "$PROJECT_EDITION" == "cohesivo" ]]; then
+    composer require ibexa/behat:$PROJECT_VERSION --no-update --no-scripts --ansi
+fi
+
 # Scripts run after the Kernel is allowed to boot in the behat environment
 docker exec install_dependencies composer update --no-scripts --ansi
 allow_behat_env
