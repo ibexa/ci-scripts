@@ -58,8 +58,14 @@ docker run --name install_dependencies -d \
 -e COMPOSER_NO_INTERACTION=1 \
 ${PHP_IMAGE}
 
-echo "> Setting up website skeleton"
-composer create-project ibexa/website-skeleton:$PROJECT_VERSION . --no-install --ansi
+# Cohesivo is not an edition of the website skeleton, it has a skeleton of its own
+PROJECT_SKELETON=ibexa/website-skeleton
+if [[ "$PROJECT_EDITION" == "cohesivo" ]]; then
+    PROJECT_SKELETON=ibexa/cohesivo-skeleton
+fi
+
+echo "> Setting up project skeleton $PROJECT_SKELETON"
+composer create-project $PROJECT_SKELETON:$PROJECT_VERSION . --no-install --ansi
 
 # Copy auth.json if needed (before the first Composer run, so a private Symfony Flex endpoint can be fetched)
 if [[ -f "${DEPENDENCY_PACKAGE_DIR}/auth.json" ]]; then
@@ -95,6 +101,10 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
     composer config repositories.ibexa composer https://updates.ibexa.co
 
     editions=(commerce experience headless)
+    # Cohesivo contains all the packages, there are no higher editions whose packages should be excluded
+    if [[ "$PROJECT_EDITION" == "cohesivo" ]]; then
+        editions=()
+    fi
 
     IBEXA_PACKAGES="[]"
     for EDITION in "${editions[@]}"; do
@@ -195,11 +205,18 @@ sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/
 echo "> Display composer.json for debugging"
 cat composer.json
 
+# Cohesivo has no Behat configuration of its own, it is tested with the one of the Experience edition
+# (the one of Commerce imports the suites of packages that Cohesivo does not install)
+BEHAT_EDITION=$PROJECT_EDITION
+if [[ "$PROJECT_EDITION" == "cohesivo" ]]; then
+    BEHAT_EDITION=experience
+fi
+
 # Create a default Behat configuration file
-if [ -f "behat_ibexa_${PROJECT_EDITION}.php" ]; then
-    cp "behat_ibexa_${PROJECT_EDITION}.php" behat.php
+if [ -f "behat_ibexa_${BEHAT_EDITION}.php" ]; then
+    cp "behat_ibexa_${BEHAT_EDITION}.php" behat.php
 else
-    cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
+    cp "behat_ibexa_${BEHAT_EDITION}.yaml" behat.yaml
 fi
 
 # Depenencies are installed and container can be removed
