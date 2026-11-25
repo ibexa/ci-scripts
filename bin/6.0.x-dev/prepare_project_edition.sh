@@ -93,6 +93,10 @@ fi
 # Scripts run after the Kernel is allowed to boot in the behat environment
 docker exec install_dependencies composer update --no-scripts --ansi
 allow_behat_env
+if [[ "$PROJECT_EDITION" == "cohesivo" ]]; then
+    # ibexa/behat is installed already, so the FriendsOfBehat SymfonyExtension has to be enabled in the behat environment as well
+    sudo sed -i "s/\['test' => true\]/['test' => true, 'behat' => true]/g" config/bundles.php
+fi
 docker exec install_dependencies composer run-script post-update-cmd --ansi
 
 # Move dependency to directory available for docker volume
