@@ -84,20 +84,14 @@ if [ -f ${DEPENDENCY_PACKAGE_DIR}/dependencies.json ]; then
     fi
 fi
 
-# The skeleton of Cohesivo requires the whole product already, and its packages register their Behat contexts in the
-# behat environment: ibexa/behat has to be installed before the first cache:clear, which runs in that environment
-if [[ "$PROJECT_EDITION" == "cohesivo" ]]; then
-    composer require ibexa/behat:$PROJECT_VERSION --no-update --no-scripts --ansi
-fi
-
 # Scripts run after the Kernel is allowed to boot in the behat environment
 docker exec install_dependencies composer update --no-scripts --ansi
 allow_behat_env
-if [[ "$PROJECT_EDITION" == "cohesivo" ]]; then
-    # ibexa/behat is installed already, so the FriendsOfBehat SymfonyExtension has to be enabled in the behat environment as well
-    sudo sed -i "s/\['test' => true\]/['test' => true, 'behat' => true]/g" config/bundles.php
+# The skeleton of Cohesivo requires the whole product already, whose packages register their Behat contexts in the
+# behat environment, which cannot boot before ibexa/behat is installed. The scripts run again at the end, in the container.
+if [[ "$PROJECT_EDITION" != "cohesivo" ]]; then
+    docker exec install_dependencies composer run-script post-update-cmd --ansi
 fi
-docker exec install_dependencies composer run-script post-update-cmd --ansi
 
 # Move dependency to directory available for docker volume
 echo "> Move ${DEPENDENCY_PACKAGE_DIR} to ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}"
@@ -153,13 +147,6 @@ if [[ "$DEPENDENCY_PACKAGE_VERSION" =~ ^[0-9]+\.[0-9]+\.x-dev$ ]]; then
 fi
 
 composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_REQUIREMENT" --no-update
-
-# TEMPORARY DEBUGGING (remove before merging)
-if [[ "$PROJECT_EDITION" == "cohesivo" ]]; then
-    echo "> composer.json before requiring the product variant"
-    cat composer.json
-    docker exec install_dependencies composer why guzzlehttp/promises || true
-fi
 
 # Install correct product variant
 docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
