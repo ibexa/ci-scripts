@@ -154,6 +154,13 @@ fi
 
 composer require "$DEPENDENCY_PACKAGE_NAME:$DEPENDENCY_PACKAGE_REQUIREMENT" --no-update
 
+# TEMPORARY DEBUGGING (remove before merging)
+if [[ "$PROJECT_EDITION" == "cohesivo" ]]; then
+    echo "> composer.json before requiring the product variant"
+    cat composer.json
+    docker exec install_dependencies composer why guzzlehttp/promises || true
+fi
+
 # Install correct product variant
 docker exec install_dependencies composer require ibexa/${PROJECT_EDITION}:${PROJECT_VERSION} -W --no-scripts --ansi
 
