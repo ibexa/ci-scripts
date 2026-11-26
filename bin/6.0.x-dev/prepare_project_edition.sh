@@ -58,8 +58,14 @@ docker run --name install_dependencies -d \
 -e COMPOSER_NO_INTERACTION=1 \
 ${PHP_IMAGE}
 
-echo "> Setting up website skeleton"
-composer create-project ibexa/website-skeleton:$PROJECT_VERSION . --no-install --ansi
+# Cohesivo is not an edition of the website skeleton, it has a skeleton of its own
+PROJECT_SKELETON=ibexa/website-skeleton
+if [[ "$PROJECT_EDITION" == "cohesivo" ]]; then
+    PROJECT_SKELETON=ibexa/cohesivo-skeleton
+fi
+
+echo "> Setting up project skeleton $PROJECT_SKELETON"
+composer create-project $PROJECT_SKELETON:$PROJECT_VERSION . --no-install --ansi
 
 # Copy auth.json if needed (before the first Composer run, so a private Symfony Flex endpoint can be fetched)
 if [[ -f "${DEPENDENCY_PACKAGE_DIR}/auth.json" ]]; then
@@ -81,7 +87,11 @@ fi
 # Scripts run after the Kernel is allowed to boot in the behat environment
 docker exec install_dependencies composer update --no-scripts --ansi
 allow_behat_env
-docker exec install_dependencies composer run-script post-update-cmd --ansi
+# The skeleton of Cohesivo requires the whole product already, whose packages register their Behat contexts in the
+# behat environment, which cannot boot before ibexa/behat is installed. The scripts run again at the end, in the container.
+if [[ "$PROJECT_EDITION" != "cohesivo" ]]; then
+    docker exec install_dependencies composer run-script post-update-cmd --ansi
+fi
 
 # Move dependency to directory available for docker volume
 echo "> Move ${DEPENDENCY_PACKAGE_DIR} to ${PROJECT_BUILD_DIR}/${DEPENDENCY_PACKAGE_NAME}"
@@ -95,6 +105,10 @@ if [[ "$PROJECT_EDITION" != "oss" ]]; then
     composer config repositories.ibexa composer https://updates.ibexa.co
 
     editions=(commerce experience headless)
+    # Cohesivo contains all the packages, there are no higher editions whose packages should be excluded
+    if [[ "$PROJECT_EDITION" == "cohesivo" ]]; then
+        editions=()
+    fi
 
     IBEXA_PACKAGES="[]"
     for EDITION in "${editions[@]}"; do
@@ -195,11 +209,18 @@ sudo sed -i "s/\['test' => true\]/\['test' => true, 'behat' => true\]/g" config/
 echo "> Display composer.json for debugging"
 cat composer.json
 
+# Cohesivo has no Behat configuration of its own, it is tested with the one of the Experience edition
+# (the one of Commerce imports the suites of packages that Cohesivo does not install)
+BEHAT_EDITION=$PROJECT_EDITION
+if [[ "$PROJECT_EDITION" == "cohesivo" ]]; then
+    BEHAT_EDITION=experience
+fi
+
 # Create a default Behat configuration file
-if [ -f "behat_ibexa_${PROJECT_EDITION}.php" ]; then
-    cp "behat_ibexa_${PROJECT_EDITION}.php" behat.php
+if [ -f "behat_ibexa_${BEHAT_EDITION}.php" ]; then
+    cp "behat_ibexa_${BEHAT_EDITION}.php" behat.php
 else
-    cp "behat_ibexa_${PROJECT_EDITION}.yaml" behat.yaml
+    cp "behat_ibexa_${BEHAT_EDITION}.yaml" behat.yaml
 fi
 
 # Depenencies are installed and container can be removed
@@ -210,6 +231,13 @@ docker container rm install_dependencies
 IFS='.' read -ra VERSION_NUMBERS <<< "$PROJECT_VERSION"
 VERSION="${VERSION_NUMBERS[0]}.${VERSION_NUMBERS[1]}/$PROJECT_EDITION"
 export PERCY_BRANCH=$VERSION
+
+# TEMPORARY WORKAROUND, only to verify the cause (remove before merging): the runner disk is more than 90% full after the
+# build, so Elasticsearch refuses to allocate the shards of its indices above its high disk watermark.
+if [[ "$PROJECT_EDITION" == "cohesivo" && -f doc/docker/elastic.yml ]]; then
+    sudo perl -0pi -e 's/^(\s*)- discovery\.type=single-node$/$&\n$1- cluster.routing.allocation.disk.threshold_enabled=false/m' doc/docker/elastic.yml
+    grep -n 'threshold_enabled' doc/docker/elastic.yml
+fi
 
 echo "> Start docker containers specified by ${COMPOSE_FILE}"
 docker compose --env-file=.env up -d
@@ -223,11 +251,32 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cac
 echo '> Clear cache & generate assets'
 docker compose --env-file=.env exec -T --user www-data app sh -c "NODE_OPTIONS='--max-old-space-size=3072' composer run post-install-cmd --ansi"
 
+# TEMPORARY DIAGNOSTICS (remove before merging): why does Elasticsearch go down during the install of Cohesivo?
+es_diagnostics() {
+    echo "=== [diagnostics] $1"
+    date -u
+    df -h / /var/lib/docker 2>/dev/null || true
+    free -m || true
+    docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}' || true
+    docker stats --no-stream --format 'table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}' || true
+    for api in '_cluster/health?pretty' '_cat/allocation?v' '_cat/indices?v' '_cluster/allocation/explain?pretty' '_cluster/settings?pretty'; do
+        echo "--- GET $api"
+        curl -s --max-time 10 "http://localhost:9200/$api" || echo "(request failed)"
+    done
+    echo '--- docker logs ibexa-elasticsearch-1 (last 60 lines)'
+    docker logs --tail 60 ibexa-elasticsearch-1 2>&1 | cut -c1-400 || true
+}
+
 echo '> Install data'
 if [[ "$COMPOSE_FILE" == *"elastic"*.yml ]]; then
     docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:elasticsearch:put-index-template"
 fi
-docker compose --env-file=.env exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install --skip-indexing --no-interaction"
+if [[ "$PROJECT_EDITION" == "cohesivo" && "$COMPOSE_FILE" == *"elastic"*.yml ]]; then
+    es_diagnostics "before the install"
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install --skip-indexing --no-interaction" || { es_diagnostics "after the failed install"; exit 1; }
+else
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install --skip-indexing --no-interaction"
+fi
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:reindex"
 
 echo '> Display database version for debugging'
