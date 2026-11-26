@@ -232,6 +232,13 @@ IFS='.' read -ra VERSION_NUMBERS <<< "$PROJECT_VERSION"
 VERSION="${VERSION_NUMBERS[0]}.${VERSION_NUMBERS[1]}/$PROJECT_EDITION"
 export PERCY_BRANCH=$VERSION
 
+# TEMPORARY WORKAROUND, only to verify the cause (remove before merging): the runner disk is more than 90% full after the
+# build, so Elasticsearch refuses to allocate the shards of its indices above its high disk watermark.
+if [[ "$PROJECT_EDITION" == "cohesivo" && -f doc/docker/elastic.yml ]]; then
+    sudo perl -0pi -e 's/^(\s*)- discovery\.type=single-node$/$&\n$1- cluster.routing.allocation.disk.threshold_enabled=false/m' doc/docker/elastic.yml
+    grep -n 'threshold_enabled' doc/docker/elastic.yml
+fi
+
 echo "> Start docker containers specified by ${COMPOSE_FILE}"
 docker compose --env-file=.env up -d
 
