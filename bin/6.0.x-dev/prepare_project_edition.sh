@@ -244,11 +244,32 @@ docker compose --env-file=.env exec -T --user www-data app sh -c "rm -rf var/cac
 echo '> Clear cache & generate assets'
 docker compose --env-file=.env exec -T --user www-data app sh -c "NODE_OPTIONS='--max-old-space-size=3072' composer run post-install-cmd --ansi"
 
+# TEMPORARY DIAGNOSTICS (remove before merging): why does Elasticsearch go down during the install of Cohesivo?
+es_diagnostics() {
+    echo "=== [diagnostics] $1"
+    date -u
+    df -h / /var/lib/docker 2>/dev/null || true
+    free -m || true
+    docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}' || true
+    docker stats --no-stream --format 'table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}' || true
+    for api in '_cluster/health?pretty' '_cat/allocation?v' '_cat/indices?v' '_cluster/allocation/explain?pretty' '_cluster/settings?pretty'; do
+        echo "--- GET $api"
+        curl -s --max-time 10 "http://localhost:9200/$api" || echo "(request failed)"
+    done
+    echo '--- docker logs ibexa-elasticsearch-1 (last 60 lines)'
+    docker logs --tail 60 ibexa-elasticsearch-1 2>&1 | cut -c1-400 || true
+}
+
 echo '> Install data'
 if [[ "$COMPOSE_FILE" == *"elastic"*.yml ]]; then
     docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:elasticsearch:put-index-template"
 fi
-docker compose --env-file=.env exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install --skip-indexing --no-interaction"
+if [[ "$PROJECT_EDITION" == "cohesivo" && "$COMPOSE_FILE" == *"elastic"*.yml ]]; then
+    es_diagnostics "before the install"
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install --skip-indexing --no-interaction" || { es_diagnostics "after the failed install"; exit 1; }
+else
+    docker compose --env-file=.env exec -T --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ibexa:install --skip-indexing --no-interaction"
+fi
 docker compose --env-file=.env exec -T --user www-data app sh -c "php bin/console ibexa:reindex"
 
 echo '> Display database version for debugging'
